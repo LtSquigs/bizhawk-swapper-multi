@@ -159,8 +159,12 @@ export class BizhawkApi {
       }
 
       const id = uuidv4();
-      const cwd = path.resolve('.');
-      const saveFile = path.join(cwd, id);
+      const saveDir = path.resolve('Saves');
+      const saveFile = path.join(saveDir, id);
+
+      if (!fs.existsSync(saveDir)) {
+        fs.mkdirSync(saveDir);
+      }
 
       BizhawkApi.responseFunctions[id] = async (response) => {
         const data = fs.readFileSync(saveFile);
@@ -187,8 +191,12 @@ export class BizhawkApi {
       }
 
       const id = uuidv4();
-      const cwd = path.resolve('.');
-      const saveFile = path.join(cwd, id);
+      const saveDir = path.resolve('Saves');
+      const saveFile = path.join(saveDir, id);
+
+      if (!fs.existsSync(saveDir)) {
+        fs.mkdirSync(saveDir);
+      }
 
       fs.writeFileSync(saveFile, saveInfo.data);
 

@@ -74,9 +74,7 @@ export class CoordinationServer {
         if (saveInfo) {
           ws.send(JSON.stringify({
             type: "load_rom_with_save",
-            name: name,
-            fileName: saveInfo.fileName,
-            path: saveInfo.path
+            name: name
           }));
 
           ws.send(saveInfo.data);
@@ -112,8 +110,6 @@ export class CoordinationServer {
         let dataMessageRecieved = false;
 
         connection.listeners["state_saved"] = (message) => {
-          result.fileName = message.fileName;
-          result.path = message.path;
           resultMessagRecieved = true;
           delete connection.listeners["state_saved"];
 

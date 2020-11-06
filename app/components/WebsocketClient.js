@@ -73,8 +73,6 @@ export class WebsocketClient {
             const loadAll = () => {
               BizhawkApi.loadRom(romName).then(() => {
                   const saveInfo = {
-                    fileName: message.fileName,
-                    path: message.path,
                     data: WebsocketClient.dataMessage
                   }
 
@@ -98,9 +96,7 @@ export class WebsocketClient {
           case "save_state":
             BizhawkApi.saveState().then(savedState => {
               WebsocketClient.client.send(JSON.stringify({
-                type: "state_saved",
-                path: savedState.path,
-                fileName: savedState.fileName
+                type: "state_saved"
               }));
               WebsocketClient.client.send(savedState.data);
             });

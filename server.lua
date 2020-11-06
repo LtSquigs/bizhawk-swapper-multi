@@ -1,7 +1,10 @@
-print('This is the socket server for the shuffler, do not close the LUA dialog box please.');
-
 check_interval = 60 -- check every second (60frames)
 current_interval = 0
+unprocessed_messages = ""
+
+if userdata.get("unprocessed_messages") ~= nil then
+  unprocessed_messages = userdata.get("unprocessed_messages")
+end
 
 function process_message(message)
   id, type, arg = string.match(message, "([^;]+);([^;]+);(.*)")
@@ -25,11 +28,25 @@ function process_message(message)
   end
 end
 
+for message in string.gmatch(unprocessed_messages, "([^\r\n]+)\r\n") do
+  message_length = string.len(message)
+  unprocessed_messages = string.sub(unprocessed_messages, message_length + 1)
+
+  process_message(message)
+end
+
 while true do -- The main cycle that causes the emulator to advance and trigger a game switch.
   if current_interval > check_interval then
       messages = comm.socketServerResponse()
-      if messages then
+      if messages ~= nil then
+        unprocessed_messages = messages
+        userdata.set("unprocessed_messages", unprocessed_messages)
+
         for message in string.gmatch(messages, "([^\r\n]+)\r\n") do
+         message_length = string.len(message)
+         unprocessed_messages = string.sub(unprocessed_messages, message_length + 1)
+         userdata.set("unprocessed_messages", unprocessed_messages)
+
          process_message(message)
         end
       end

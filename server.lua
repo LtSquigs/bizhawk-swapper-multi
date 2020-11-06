@@ -12,19 +12,19 @@ function process_message(message)
   if type == 'open_rom' then
     print("Opening Rom")
     client.openrom(string.sub(arg, 1, -2))
-    comm.socketServerSend(id .. ';rom_loaded')
+    comm.socketServerSend(id .. ';rom_loaded;0;\r\n')
   end
 
   if type == 'save_state' then
     print("Saving State")
     savestate.save(string.sub(arg, 1, -2))
-    comm.socketServerSend(id .. ';state_saved')
+    comm.socketServerSend(id .. ';state_saved;0;\r\n')
   end
 
   if type == 'load_state' then
     print("Loading State")
     savestate.load(string.sub(arg, 1, -2))
-    comm.socketServerSend(id .. ';state_loaded')
+    comm.socketServerSend(id .. ';state_loaded;0;\r\n')
   end
 end
 
@@ -38,7 +38,7 @@ end
 while true do -- The main cycle that causes the emulator to advance and trigger a game switch.
   if current_interval > check_interval then
       messages = comm.socketServerResponse()
-      if messages ~= nil then
+      if messages ~= "" then
         unprocessed_messages = messages
         userdata.set("unprocessed_messages", unprocessed_messages)
 
@@ -46,8 +46,6 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
          message_length = string.len(message)
          unprocessed_messages = string.sub(unprocessed_messages, message_length + 1)
          userdata.set("unprocessed_messages", unprocessed_messages)
-
-         process_message(message)
         end
       end
   end

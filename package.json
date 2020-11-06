@@ -1,19 +1,33 @@
 {
   "name": "bizhawk-swapper-multi",
   "version": "1.0.0",
-  "description": "",
+  "description": "An electron app used to swap games remotely while playing on the BizHawk emulator",
   "main": "main.js",
+  "build": {
+    "productName": "Bizhawk Multiplayer Swapper",
+    "appId": "bizhawk.multiplayer.swapper",
+    "win": {
+      "target": "portable",
+      "icon": "baseline_swap_horizontal_circle_black_48dp.png"
+    }
+  },
+  "postinstall": "electron-builder install-app-deps",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder -w"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "electron": "^10.1.5",
+    "electron-builder": "^22.9.1",
     "webpack": "^5.4.0",
     "webpack-cli": "^4.2.0"
   },
   "dependencies": {
+    "bootstrap": "^4.5.3",
+    "htm": "^3.0.4",
     "ws": "^7.3.1"
   }
 }

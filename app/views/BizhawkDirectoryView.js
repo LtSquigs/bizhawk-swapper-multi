@@ -1,4 +1,4 @@
-import { html, Component } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { html, Component, render } from '../../node_modules/htm/preact/standalone.module.js';
 import { Actions } from '../components/Actions.js';
 
 const {dialog} = require('electron').remote;

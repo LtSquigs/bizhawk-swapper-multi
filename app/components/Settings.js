@@ -1,6 +1,5 @@
 import { BizhawkApi } from './BizhawkApi.js';
-
-let fs = require('fs');
+import { Files } from './Files.js';
 
 export class Settings {
   static settingUpdateHandlers = [];
@@ -8,15 +7,15 @@ export class Settings {
     bizhawkDir: "BizHawk",
     username: null,
     serverAddress: null,
-    minTime: 5,
-    maxTime: 30,
+    minTime: 60,
+    maxTime: 180,
     countdown: true,
     everyoneSwaps: true
   };
 
   static initialize() {
-    if (fs.existsSync('settings.json')) {
-      let currentSettings =  JSON.parse(fs.readFileSync('settings.json'));
+    if (Files.existsSync('settings.json')) {
+      let currentSettings =  JSON.parse(Files.readFileSync('settings.json'));
 
       Settings.settings = {
         ...Settings.settings,
@@ -40,7 +39,7 @@ export class Settings {
   }
 
   static syncSettings() {
-    fs.writeFileSync('settings.json', JSON.stringify(Settings.settings));
+    Files.writeFileSync('settings.json', JSON.stringify(Settings.settings));
   }
 
   static setSetting(name, value) {

@@ -1,6 +1,6 @@
 import { State } from './State.js';
+import { Files } from './Files.js';
 
-let fs = require('fs');
 let path = require('path');
 let exec = require('child_process').execFile;
 const net = require('net');
@@ -101,24 +101,24 @@ export class BizhawkApi {
   }
 
   static updateRomList() {
-    if (!fs.existsSync("SwapRoms")) {
+    if (!Files.existsSync("SwapRoms")) {
       State.setState("roms", []);
       return;
     }
 
-    const files = fs.readdirSync("SwapRoms");
+    const files = Files.readdirSync("SwapRoms");
 
     State.setState("roms", files.map(file => { return { name: file, selected: false }}));
   }
 
   static isValidDirectory(directory) {
-    if(!fs.existsSync(directory)) {
+    if(!Files.existsSync(directory)) {
       return { valid: false, error: `Can't find Directory ${directory}.` };
     }
 
     const emuHawkPath = path.join(directory, "EmuHawk.exe");
 
-    if(!fs.existsSync(emuHawkPath)) {
+    if(!Files.existsSync(emuHawkPath)) {
       return { valid: false, error: `Directory ${directory} does not contain EmuHawk.exe.\nIs this a BizHawk directory?`};
     }
 
@@ -127,12 +127,12 @@ export class BizhawkApi {
 
   static open() {
     const bizhawkDir = State.getState("bizhawkDir");
-    const serverLua = fs.readFileSync('server.lua');
+    const serverLua = Files.readFileSync('server.lua', true);
 
-    fs.writeFileSync(path.join(bizhawkDir, "server.lua"), serverLua);
+    Files.writeFileSync(path.join(bizhawkDir, "server.lua"), serverLua);
 
     exec("EmuHawk.exe", ['--lua=server.lua', '--socket_ip=127.0.0.1', '--socket_port=64646'], {
-      cwd: bizhawkDir
+      cwd: Files.resolve(bizhawkDir)
     }, () => { });
   }
 
@@ -148,7 +148,7 @@ export class BizhawkApi {
         resolve();
       }
 
-      BizhawkApi.send(id, "open_rom", path.resolve(path.join('SwapRoms', rom)));
+      BizhawkApi.send(id, "open_rom", Files.resolve(path.join('SwapRoms', rom)));
     });
   }
 
@@ -159,23 +159,20 @@ export class BizhawkApi {
       }
 
       const id = uuidv4();
-      const saveDir = path.resolve('Saves');
+      const saveDir = Files.resolve('Saves');
       const saveFile = path.join(saveDir, id);
 
-      if (!fs.existsSync(saveDir)) {
-        fs.mkdirSync(saveDir);
+      if (!Files.existsSync(saveDir)) {
+        Files.mkdirSync(saveDir);
       }
 
       BizhawkApi.responseFunctions[id] = async (response) => {
-        const data = fs.readFileSync(saveFile);
-        const resolvedBizhawk = path.resolve(State.getState("bizhawkDir"));
+        const data = Files.readFileSync(saveFile);
 
         // delete the save as it has no use now
-        fs.unlinkSync(saveFile);
+        Files.unlinkSync(saveFile);
 
         resolve({
-          fileName: path.basename(saveFile),
-          path: saveFile.replace(path.basename(saveFile), '').replace(resolvedBizhawk, ''),
           data: data
         });
       }
@@ -191,17 +188,17 @@ export class BizhawkApi {
       }
 
       const id = uuidv4();
-      const saveDir = path.resolve('Saves');
+      const saveDir = Files.resolve('Saves');
       const saveFile = path.join(saveDir, id);
 
-      if (!fs.existsSync(saveDir)) {
-        fs.mkdirSync(saveDir);
+      if (!Files.existsSync(saveDir)) {
+        Files.mkdirSync(saveDir);
       }
 
-      fs.writeFileSync(saveFile, saveInfo.data);
+      Files.writeFileSync(saveFile, saveInfo.data);
 
       BizhawkApi.responseFunctions[id] = async (response) => {
-        fs.unlinkSync(saveFile)
+        Files.unlinkSync(saveFile)
         resolve();
       }
 

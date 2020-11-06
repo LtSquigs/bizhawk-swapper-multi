@@ -1,4 +1,4 @@
-import { html, Component, render } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { html, Component, render } from '../../node_modules/htm/preact/standalone.module.js';
 import { BizhawkDirectoryView } from './BizhawkDirectoryView.js';
 import { HostClientSelectionView } from './HostClientSelectionView.js';
 import { MainView } from './MainView.js';

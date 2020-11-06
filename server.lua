@@ -46,6 +46,8 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
          message_length = string.len(message)
          unprocessed_messages = string.sub(unprocessed_messages, message_length + 1)
          userdata.set("unprocessed_messages", unprocessed_messages)
+
+         process_message(message)
         end
       end
   end

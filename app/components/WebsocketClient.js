@@ -61,29 +61,31 @@ export class WebsocketClient {
             break;
           case "load_rom":
             romName = message.name;
-            BizhawkApi.loadRom(romName);
-            WebsocketClient.client.send(JSON.stringify({
-              type: "rom_loaded"
-            }));
+            BizhawkApi.loadRom(romName).then(() => {
+              WebsocketClient.client.send(JSON.stringify({
+                type: "rom_loaded"
+              }));
+            });
             break;
           case "load_rom_with_save":
             romName = message.name;
 
             const loadAll = () => {
-              BizhawkApi.loadRom(romName);
-              const saveInfo = {
-                filePath: message.fileName,
-                path: message.path,
-                data: WebsocketClient.dataMessage
-              }
+              BizhawkApi.loadRom(romName).then(() => {
+                  const saveInfo = {
+                    filePath: message.fileName,
+                    path: message.path,
+                    data: WebsocketClient.dataMessage
+                  }
 
-              WebsocketClient.dataMessage = null;
+                  WebsocketClient.dataMessage = null;
 
-              BizhawkApi.loadState(saveInfo);
-
-              WebsocketClient.client.send(JSON.stringify({
-                type: "rom_loaded"
-              }));
+                  BizhawkApi.loadState(saveInfo).then(() => {
+                    WebsocketClient.client.send(JSON.stringify({
+                      type: "rom_loaded"
+                    }));
+                  });
+              });
             }
 
             if (WebsocketClient.dataMessage) {
@@ -94,13 +96,14 @@ export class WebsocketClient {
 
             break;
           case "save_state":
-            const savedState = BizhawkApi.saveState();
-            WebsocketClient.client.send(JSON.stringify({
-              type: "state_saved",
-              path: savedState.path,
-              fileName: savedState.fileName
-            }));
-            WebsocketClient.client.send(savedState.data);
+            BizhawkApi.saveState().then(savedState => {
+              WebsocketClient.client.send(JSON.stringify({
+                type: "state_saved",
+                path: savedState.path,
+                fileName: savedState.fileName
+              }));
+              WebsocketClient.client.send(savedState.data);
+            });
 
         }
       }

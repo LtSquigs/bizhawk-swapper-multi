@@ -48,12 +48,15 @@ export class CoordinationServer {
       const myUsername = Settings.getSetting('username');
 
       if(player == myUsername) {
-        BizhawkApi.loadRom(name);
-
-        if (saveInfo) {
-          BizhawkApi.loadState(saveInfo);
-        }
-        resolve();
+        BizhawkApi.loadRom(name).then(() => {
+          if (saveInfo) {
+            BizhawkApi.loadState(saveInfo).then(() => {
+              resolve();
+            });
+          } else {
+            resolve();
+          }
+        });
       } else {
         let connection = null;
         for(let id in CoordinationServer.connections) {
@@ -92,8 +95,9 @@ export class CoordinationServer {
       const myUsername = Settings.getSetting('username');
 
       if(player == myUsername) {
-        const result = BizhawkApi.saveState();
-        resolve({ player: player, ...result});
+        BizhawkApi.saveState().then(result => {
+          resolve({ player: player, ...result});
+        });
       } else {
         let connection = null;
         for(let id in CoordinationServer.connections) {

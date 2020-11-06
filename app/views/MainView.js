@@ -115,10 +115,12 @@ export class MainView extends Component {
                 <input type="number" class="form-control col-4"  value=${this.props.maxSwapTime} onChange=${this.updateMaxTime} disabled=${!this.props.isHost}></input><span>(s)</span>
               </div>
             </div>
+            <!--
             <div class="form-check">
               <input type="checkbox" class="form-check-input" checked=${this.props.enableCountdown} onChange=${this.updateCountdown} disabled=${!this.props.isHost}></input>
               <label class="form-check-label">Enable Countdown</label>
             </div>
+            -->
             <div class="form-check">
               <input type="checkbox" class="form-check-input" checked=${this.props.everyoneSwaps} onChange=${this.updateEveryoneSwaps} disabled=${!this.props.isHost}></input>
               <label class="form-check-label">Everyone Swaps Together</label>

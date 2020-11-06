@@ -26,6 +26,10 @@ export class Settings {
 
     Settings.syncSettings();
 
+    if(!Settings.settings.bizhawkDir) {
+      Settings.settings.bizhawkDir = "BizHawk"
+    }
+
     if(Settings.settings.bizhawkDir) {
       const { valid } = BizhawkApi.isValidDirectory(Settings.settings.bizhawkDir);
 

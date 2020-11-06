@@ -2,10 +2,8 @@ import { State } from './State.js';
 
 let fs = require('fs');
 let path = require('path');
-let ws = require('ws');
 let exec = require('child_process').execFile;
-const { resolve } = require('path');
-const { readdir } = require('fs').promises;
+const net = require('net');
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -28,7 +26,7 @@ async function* getFiles(dir) {
 
 export class BizhawkApi {
 
-  static websocket = null;
+  static socket = null;
 
   static websocketInterval = null;
 
@@ -37,56 +35,69 @@ export class BizhawkApi {
   static start() {
     BizhawkApi.updateRomList();
 
-    BizhawkApi.websocketInterval = setInterval( () => {
-      BizhawkApi.connect();
-    }, 5000)
-
     BizhawkApi.connect();
   }
 
   static stop() {
-    if (BizhawkApi.websocketInterval) {
-      clearInterval(BizhawkApi.websocketInterval);
-    }
-
-    if(BizhawkApi.websocket) {
-      BizhawkApi.websocket.close();
+    if (BizhawkApi.server) {
+      BizhawkApi.server.close();
+      BizhawkApi.server = null;
     }
   }
 
   static connect() {
-    const bizHawkClient = new ws('ws://localhost:64646');
+    BizhawkApi.server = net.createServer((socket) => {
+      BizhawkApi.socket = socket;
+      // 'connection' listener.
+      State.setState("bizhawkConnected", true);
 
-    bizHawkClient.on('open', () => {
-      BizhawkApi.websocket = bizHawkClient;
-      if (BizhawkApi.websocketInterval) {
-        clearInterval(BizhawkApi.websocketInterval)
-      }
+      BizhawkApi.socket.on('data', (data) => {
+        const parts = data.toString().split(';');
+        const id = parts[0];
 
-      BizhawkApi.websocket.on("message", (message) => {
-        message = JSON.parse(message);
-        const id = message.id;
-
-        if (BizhawkApi.responseFunctions[id]) {
-          BizhawkApi.responseFunctions[id](message);
-
-          delete BizhawkApi.responseFunctions[id];
+        if(BizhawkApi.responseFunctions[id]) {
+          BizhawkApi.responseFunctions[id](parts[1]);
         }
       });
 
-      State.setState("bizhawkConnected", true);
+      BizhawkApi.socket.on('end', () => {
+        State.setState("bizhawkConnected", false);
+        BizhawkApi.socket = null;
+      });
+
+      BizhawkApi.socket.on('error', () => {
+        State.setState("bizhawkConnected", false);
+        BizhawkApi.socket = null;
+      })
+
+      BizhawkApi.socket.pipe(BizhawkApi.socket);
     });
 
-    bizHawkClient.on('close', () => {
-      State.setState("bizhawkConnected", false);
-
-      BizhawkApi.websocketInterval = setInterval( () => {
-        BizhawkApi.connect();
-      }, 5000)
+    BizhawkApi.server.on('error', (err) => {
+      BizhawkApi.socket = null;
+      BizhawkApi.server = null;
     });
 
-    bizHawkClient.on('error', () => {
+    BizhawkApi.server.listen(64646, () => {
+      BizhawkApi.socket = null;
+      BizhawkApi.server = null;
     });
+  }
+
+  static send(id, messageType, argument) {
+    if(!BizhawkApi.socket) {
+      return;
+    }
+
+    let messageStr = "";
+
+    if(argument) {
+      messageStr = `${id};${messageType};${argument};\r\n`;
+    } else {
+      messageStr = `${id};${messageType};0;\r\n`
+    }
+
+    BizhawkApi.socket.write(messageStr);
   }
 
   static updateRomList() {
@@ -116,22 +127,18 @@ export class BizhawkApi {
 
   static open() {
     const bizhawkDir = State.getState("bizhawkDir");
-    const serverDLL = fs.readFileSync('BizHawkWebsocketServer.dll');
+    const serverLua = fs.readFileSync('server.lua');
 
-    if(!fs.existsSync(path.join(bizhawkDir, "ExternalTools"))) {
-      fs.mkdirSync(path.join(bizhawkDir, "ExternalTools"));
-    }
+    fs.writeFileSync(path.join(bizhawkDir, "server.lua"), serverLua);
 
-    fs.writeFileSync(path.join(bizhawkDir, "ExternalTools", "BizHawkWebsocketServer.dll"), serverDLL);
-
-    exec("EmuHawk.exe", ['--open-ext-tool-dll=BizHawkWebsocketServer'], {
+    exec("EmuHawk.exe", ['--lua=server.lua', '--socket_ip=127.0.0.1', '--socket_port=64646'], {
       cwd: bizhawkDir
-    }, (err) => { console.log(err) });
+    }, () => { });
   }
 
   static loadRom(rom) {
     return new Promise((resolve, reject) => {
-      if(!BizhawkApi.websocket) {
+      if(!BizhawkApi.socket) {
         return resolve();
       }
 
@@ -141,38 +148,21 @@ export class BizhawkApi {
         resolve();
       }
 
-      BizhawkApi.websocket.send(JSON.stringify({
-        message_type: "METHOD",
-        id: id,
-        function: "EmuClientApi.OpenRom",
-        arguments: [path.resolve(path.join('SwapRoms', rom))]
-      }));
+      BizhawkApi.send(id, "open_rom", path.resolve(path.join('SwapRoms', rom)));
     });
   }
 
   static saveState() {
     return new Promise((resolve, reject) => {
-      if(!BizhawkApi.websocket) {
+      if(!BizhawkApi.socket) {
         return resolve({});
       }
 
       const id = uuidv4();
+      const cwd = path.resolve('.');
+      const saveFile = path.join(cwd, id);
 
       BizhawkApi.responseFunctions[id] = async (response) => {
-        let saveFile = null;
-        // search for state based off name in here
-        for await (const f of getFiles(State.getState("bizhawkDir"))) {
-          if (f.indexOf(`${id}.State`) !== -1) {
-            saveFile = f;
-            break;
-          }
-        }
-
-        if (!saveFile) {
-          resolve({});
-          return;
-        }
-
         const data = fs.readFileSync(saveFile);
         const resolvedBizhawk = path.resolve(State.getState("bizhawkDir"));
 
@@ -186,38 +176,29 @@ export class BizhawkApi {
         });
       }
 
-      BizhawkApi.websocket.send(JSON.stringify({
-        message_type: "METHOD",
-        id: id,
-        function: "EmuClientApi.SaveState",
-        arguments: [`${id}`]
-      }));
+      BizhawkApi.send(id, "save_state", `${saveFile}`);
     });
   }
 
   static loadState(saveInfo) {
     return new Promise((resolve, reject) => {
-      if(!BizhawkApi.websocket) {
+      if(!BizhawkApi.socket) {
         return resolve({});
       }
-      const savePath = path.join(State.getState("bizhawkDir"), saveInfo.path, saveInfo.fileName);
-
-      fs.writeFileSync(savePath, saveInfo.data);
 
       const id = uuidv4();
+      const cwd = path.resolve('.');
+      const saveFile = path.join(cwd, id);
+
+      fs.writeFileSync(saveFile, saveInfo.data);
 
       BizhawkApi.responseFunctions[id] = async (response) => {
-        // delete the save as it is no longer used
-        fs.unlinkSync(savePath)
+        fs.unlinkSync(saveFile)
         resolve();
       }
 
-      BizhawkApi.websocket.send(JSON.stringify({
-        message_type: "METHOD",
-        id: id,
-        function: "EmuClientApi.LoadState",
-        arguments: [`${saveInfo.fileName.replace('.State', '')}`]
-      }));
+
+      BizhawkApi.send(id, "load_state", `${saveFile}`);
     });
   }
 }

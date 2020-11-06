@@ -5,7 +5,7 @@ let fs = require('fs');
 export class Settings {
   static settingUpdateHandlers = [];
   static settings = {
-    bizhawkDir: null,
+    bizhawkDir: "BizHawk",
     username: null,
     serverAddress: null,
     minTime: 5,

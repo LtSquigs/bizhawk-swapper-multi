@@ -1,6 +1,8 @@
 # bizhawk-swapper-multi
 
-Howto Use:
+Based off Brossentia's shuffle script, but multiplayer
+
+How to Use:
 
 1. Download the Release package (includes a copy of Bizhawk)
   1a. If you already have a copy of bizhawk configured and all, delete the BizHawk directory in the folder, the application will ask you to point it to a new one

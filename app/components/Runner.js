@@ -22,16 +22,16 @@ function randomNumber(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function areSame(a, b) {
-  let same = true;
+function areAllDifferent(a, b) {
+  let different = true;
 
   a.forEach((item, idx) => {
-    if(item !== b[idx]) {
-      same = false;
+    if(item === b[idx]) {
+      different = false;
     }
   });
 
-  return same;
+  return different;
 }
 
 export class Runner {
@@ -70,8 +70,8 @@ export class Runner {
   }
 
   static shufflePlayers() {
-    const oldMap = {...Runner.playersToGames};
-    let newPlayers = shuffleArray(Object.keys(oldMap));
+    const originalMap = {...Runner.playersToGames};
+    let newPlayers = shuffleArray(Object.keys(originalMap));
 
     // If not set to swap everyone, then here we cut down  to a smaller subset
     const shuffleEveryone = State.getState("everyoneSwaps");
@@ -82,16 +82,18 @@ export class Runner {
       newPlayers = newPlayers.slice(0, randLength);
     }
 
-    const oldPlayers = Object.keys(oldMap).filter((item) => newPlayers.indexOf(item) !== -1);
+    const oldPlayers = Object.keys(originalMap).filter((item) => newPlayers.indexOf(item) !== -1);
 
-    while(oldPlayers.length > 1 && areSame(oldPlayers, newPlayers)) {
+    while(oldPlayers.length > 1 && !areAllDifferent(oldPlayers, newPlayers)) {
       newPlayers = shuffleArray(newPlayers);
     }
 
     const newMap = {};
+    const oldMap = {};
 
     newPlayers.forEach((player, idx) => {
-      newMap[player] = oldMap[oldPlayers[idx]];
+      newMap[player] = originalMap[oldPlayers[idx]];
+      oldMap[player] = originalMap[player];
     });
 
     if (oldPlayers.length > 1) {

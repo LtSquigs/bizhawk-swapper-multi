@@ -24,7 +24,8 @@ e.g. Im playing Super Mario World, your playing Kirby. Now randomly Im playing K
 8. Once ready to play, each player must hit the Launch BizHawk button. This will launch the BizHawk instance and connect it to the application.
   - Do not close the LUA Script window that is opened with BizHawk
 9. This is your opportunity to configure BizHawk before the games are run, configure inputs etc.
-10. When ready, the Host can hit the "Run Games" button to start the games running and swapping!
+10. The Host must select which ROMs to play and swap.
+11. When all players are ready and the # of ROMs selected = the # of players, the Host can hit the "Run Games" button to start the games running and swapping!
   - The number of games selected to be run must be equal to the number of players
   
 # Settings

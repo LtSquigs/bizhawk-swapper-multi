@@ -15,6 +15,10 @@ export class MainView extends Component {
     Actions.updateEveryoneSwaps(event.target.checked);
   }
 
+  updateLoadLastSaves(event) {
+    Actions.updateLoadLastSaves(event.target.checked);
+  }
+
   updateCountdown(event) {
     Actions.updateCountdown(event.target.checked);
   }
@@ -114,6 +118,10 @@ export class MainView extends Component {
               <div class="form-row">
                 <input type="number" class="form-control col-4"  value=${this.props.maxSwapTime} onChange=${this.updateMaxTime} disabled=${!this.props.isHost}></input><span>(s)</span>
               </div>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" checked=${this.props.loadLastKnownSaves} onChange=${this.updateLoadLastSaves} disabled=${!this.props.isHost}></input>
+              <label class="form-check-label">Resume From Last Save</label>
             </div>
             <!--
             <div class="form-check">

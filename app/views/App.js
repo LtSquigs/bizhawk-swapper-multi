@@ -39,6 +39,7 @@ class App extends Component {
       isHost=${this.state.isHost}
       enableCountdown=${this.state.enableCountdown}
       everyoneSwaps=${this.state.everyoneSwaps}
+      loadLastKnownSaves=${this.state.loadLastKnownSaves}
       minSwapTime=${this.state.minSwapTime}
       maxSwapTime=${this.state.maxSwapTime}
       users=${this.state.users}

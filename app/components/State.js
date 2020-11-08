@@ -15,6 +15,7 @@ export class State {
       bizhawkDirError: null,
       everyoneSwaps: true,
       enableCountdown: true,
+      loadLastKnownSaves: true,
       isHost: false,
       serverAddress: '',
       serverRunning: false,
@@ -34,6 +35,7 @@ export class State {
     State.state.enableCountdown = Settings.getSetting("countdown");
     State.state.minSwapTime = Settings.getSetting("minTime");
     State.state.maxSwapTime = Settings.getSetting("maxTime");
+    State.state.loadLastKnownSaves = Settings.getSetting("loadLastKnownSaves");
 
     return State.state;
   }

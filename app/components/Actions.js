@@ -94,6 +94,11 @@ export class Actions {
     Settings.setSetting("everyoneSwaps", swaps);
   }
 
+  static updateLoadLastSaves(loadSaves) {
+    State.setState("loadLastKnownSaves", loadSaves);
+    Settings.setSetting("loadLastKnownSaves", loadSaves);
+  }
+
   static updateCountdown(countdown) {
     State.setState("enableCountdown", countdown);
     Settings.setSetting("countdown", countdown);

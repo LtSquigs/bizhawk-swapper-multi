@@ -4,6 +4,8 @@ import { BizhawkApi } from './BizhawkApi.js';
 import { WebsocketClient } from './WebsocketClient.js';
 import { CoordinationServer } from './CoordinationServer.js'
 
+const path = require('path');
+
 function shuffleArray(a) {
   a = a.slice();
 

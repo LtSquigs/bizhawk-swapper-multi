@@ -167,7 +167,7 @@ export class Runner {
       const game = oldMap[result.player];
       const saveFile = path.join(saveDir, game + '.save');
 
-      Files.writeFileSync(saveFile);
+      Files.writeFileSync(saveFile, result.data);
     });
   }
 }

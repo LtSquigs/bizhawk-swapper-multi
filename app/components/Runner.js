@@ -107,16 +107,16 @@ export class Runner {
 
   static updatePlayerGames(newMap, oldMap, initial) {
     if (initial) {
-      let gamesToSaves = {};
+      let gamesToFirstSaves = {};
 
       if (State.getState("loadLastKnownSaves")) {
-        gamesToSaves = Runner.loadLastSaves();
+        gamesToFirstSaves = Runner.loadLastSaves();
       }
 
       const loadPromises = Object.keys(newMap).map((player) => {
         const game = newMap[player];
-        if (gamesToSaves[game]) {
-          return CoordinationServer.loadRom(player, game, gamesToSaves[game])
+        if (gamesToFirstSaves[game]) {
+          return CoordinationServer.loadRom(player, game, gamesToFirstSaves[game])
         }
 
         return CoordinationServer.loadRom(player, game);
@@ -155,7 +155,9 @@ export class Runner {
       if(save.endsWith('.save')) {
         gamesToSaves[save.replace('.save', '')] = { data: Files.readFileSync(path.join(saveDir, save)) }
       }
-    })
+    });
+
+    return gamesToSaves;
   }
 
   static saveStates(saves, oldMap) {

@@ -115,8 +115,13 @@ export class Runner {
 
       const loadPromises = Object.keys(newMap).map((player) => {
         const game = newMap[player];
+        if (gamesToSaves[game]) {
+          return CoordinationServer.loadRom(player, game, gamesToSaves[game])
+        }
+
         return CoordinationServer.loadRom(player, game);
       });
+
     } else {
       const savePromises = Object.keys(oldMap).map((player) => {
         return CoordinationServer.saveState(player);
@@ -148,7 +153,7 @@ export class Runner {
 
     saves.forEach((save) => {
       if(save.endsWith('.save')) {
-        gamesToSaves[save.replace('.save', '')] = Files.readFileSync(path.join(saveDir, save))
+        gamesToSaves[save.replace('.save', '')] = { data: Files.readFileSync(path.join(saveDir, save)) }
       }
     })
   }

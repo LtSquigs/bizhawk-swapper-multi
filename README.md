@@ -42,7 +42,7 @@ The settings on the settings page include:
   - If enabled, all players swap together. If disabled, a random subset of players are swapped when a swap occurs.
   
 You can also use the "Resume From Last Save" function to prepare a save state in advanced if you want to avoid the title screen/initial setup of a game.
-The system looks for saves with the name structure `<romFileName>.save` in the `SaveFiles` directory.
+The system looks for saves with the name structure `<romFileName>.save` in the `Saves` directory.
 
 e.g. `Saves\Super Mario World.sfc.save` would be the last known save for the rom `Super Mario World.sfc`
 

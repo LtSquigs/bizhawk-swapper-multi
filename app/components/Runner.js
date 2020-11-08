@@ -127,7 +127,7 @@ export class Runner {
           gamesToSaves[oldMap[result.player]] = result;
         });
 
-        Runner.saveStates(results);
+        Runner.saveStates(results, oldMap);
 
         const loadPromises = Object.keys(newMap).map((player) => {
           const game = newMap[player];
@@ -151,7 +151,7 @@ export class Runner {
     })
   }
 
-  static saveStates(saves) {
+  static saveStates(saves, oldMap) {
     const saveDir = 'Saves';
 
     saves.forEach((result) => {

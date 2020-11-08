@@ -154,7 +154,7 @@ export class Runner {
   static saveStates(saves) {
     const saveDir = 'Saves';
 
-    results.forEach((result) => {
+    saves.forEach((result) => {
       const game = oldMap[result.player];
       const saveFile = path.join(saveDir, game + '.save');
 

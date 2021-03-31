@@ -25,9 +25,9 @@ e.g. Im playing Super Mario World, your playing Kirby. Now randomly Im playing K
   - Do not close the LUA Script window that is opened with BizHawk
 9. This is your opportunity to configure BizHawk before the games are run, configure inputs etc.
 10. The Host must select which ROMs to play and swap.
-11. When all players are ready and the # of ROMs selected = the # of players, the Host can hit the "Run Games" button to start the games running and swapping!
-  - The number of games selected to be run must be equal to the number of players
-  
+11. When all players are ready  the Host can hit the "Run Games" button to start the games running and swapping!
+  - If you have more or less games than the number of players, see the section below on rom swapping rules to know how it works
+
 # Settings
 
 The settings on the settings page include:
@@ -40,18 +40,32 @@ The settings on the settings page include:
   - If enabled, the swapper system will send the last known Save State for the games selected to the clients on initial load. Allowing you to resume playing over multiple sessions.
 - Everyone Swaps
   - If enabled, all players swap together. If disabled, a random subset of players are swapped when a swap occurs.
-  
+- Automatic swapping
+  - If turned off the automatic swapping will stop, can be turned off and on at any time to stop Swapping
+- Countdown
+  - If turned on a friendly 3, 2, 1 countdown will display on the emulator, same as the other swapper script.
+
 You can also use the "Resume From Last Save" function to prepare a save state in advanced if you want to avoid the title screen/initial setup of a game.
 The system looks for saves with the name structure `<romFileName>.save` in the `Saves` directory.
 
 e.g. `Saves\Super Mario World.sfc.save` would be the last known save for the rom `Super Mario World.sfc`
 
+You can manually swap as well using the Manual Swap button, if automatic swapping is on this will reset the timer but not stop automatic swapping.
+
+# Rom Swapping How It Works
+
+When the number of games = the # of players, every person swaps with eachother (unless "Everyone Swaps is unmarked, then some people can not swap").
+
+When you have more Games than the number of players, those games will be swapped in and out randomly.
+
+When you have less games than the number of players (as you mark games as done), than the person who most recently finished their game will be removed from the swap rotation.
+
+e.g. Person A and Person B are playing Game A and Game B respectively with Game C in reserve. If Game B is removed from the rotation, than rotation will continue with just Game A and B.
+
+However if Game C is then removed from the rotation, whoever had Game C last is removed from the rotation, and only the players with "live games" will continue to rotate.
+
 # TODO
 
 List of things that may eventually be added to this system:
 
-1. The ability to run less or more roms than the number of players (Would some players just have a black screen?)
-2. The ability to run without shuffle, and manually control the game swaps
-3. UI To display which player is playing which ROM
-4. Add Countdown feature from Brossentia's Script
-5. The ability to mark a ROM as "completed" and taken out of rotation (Requires #1)
+1. UI To display which player is playing which ROM

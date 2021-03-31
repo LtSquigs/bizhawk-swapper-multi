@@ -43,6 +43,21 @@ export class CoordinationServer {
     }
   }
 
+  static sendCountdown(player) {
+    return new Promise((resolve, reject) => {
+      const myUsername = Settings.getSetting('username');
+
+      if(player == myUsername) {
+        BizhawkApi.startCountdown();
+      } else {
+        ws.send(JSON.stringify({
+          type: "start_countdown"
+        }));
+      }
+      resolve();
+    });
+  }
+
   static loadRom(player, name, saveInfo) {
     return new Promise((resolve, reject) => {
       const myUsername = Settings.getSetting('username');

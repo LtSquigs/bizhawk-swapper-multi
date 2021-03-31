@@ -37,6 +37,8 @@ class App extends Component {
     return html`<${MainView}
       bizhawkConnected=${this.state.bizhawkConnected}
       isHost=${this.state.isHost}
+      isRunning=${this.state.isRunning}
+      automaticSwapping=${this.state.automaticSwapping}
       enableCountdown=${this.state.enableCountdown}
       everyoneSwaps=${this.state.everyoneSwaps}
       loadLastKnownSaves=${this.state.loadLastKnownSaves}

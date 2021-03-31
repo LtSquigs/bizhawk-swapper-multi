@@ -53,6 +53,10 @@ export class Actions {
     });
   }
 
+  static updateIsRunning(running) {
+    State.setState("isRunning", running);
+  }
+
   static updateRom(name, selected) {
     let roms = State.getState("roms");
 
@@ -62,7 +66,15 @@ export class Actions {
       }
 
       return romInfo;
-    })
+    });
+
+    if (State.getState("isRunning")) {
+      if (selected == true) {
+        Runner.reviveGame(name);
+      } else {
+        Runner.killGame(name);
+      }
+    }
 
     State.setState("roms", roms);
   }
@@ -94,6 +106,21 @@ export class Actions {
     Settings.setSetting("everyoneSwaps", swaps);
   }
 
+  static updateAutomaticSwapping(swaps) {
+    State.setState("automaticSwapping", swaps);
+    Settings.setSetting("automaticSwapping", swaps);
+
+    if(swaps == false) {
+      Runner.clearTimeout()
+    } else {
+      Runner.registerNextShuffle();
+    }
+  }
+
+  static forceSwap() {
+    Runner.shufflePlayers();
+  }
+
   static updateLoadLastSaves(loadSaves) {
     State.setState("loadLastKnownSaves", loadSaves);
     Settings.setSetting("loadLastKnownSaves", loadSaves);
@@ -102,6 +129,10 @@ export class Actions {
   static updateCountdown(countdown) {
     State.setState("enableCountdown", countdown);
     Settings.setSetting("countdown", countdown);
+  }
+
+  static swapPlayers() {
+    Runner.shufflePlayers();
   }
 
   static launchBizhawk() {

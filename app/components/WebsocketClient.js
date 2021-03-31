@@ -59,6 +59,9 @@ export class WebsocketClient {
           case "update_users":
             State.setState("users", {...message.users});
             break;
+          case "start_countdown":
+            BizhawkApi.startCountdown();
+            break;
           case "load_rom":
             romName = message.name;
             BizhawkApi.loadRom(romName).then(() => {

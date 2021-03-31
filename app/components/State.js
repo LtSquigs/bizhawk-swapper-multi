@@ -17,13 +17,15 @@ export class State {
       enableCountdown: true,
       loadLastKnownSaves: true,
       isHost: false,
+      isRunning: false,
       serverAddress: '',
       serverRunning: false,
       username: "",
       users: {},
       minSwapTime: 0,
       maxSwapTime: 0,
-      roms: []
+      roms: [],
+      automaticSwapping: true,
     }
 
     Settings.initialize();
@@ -36,6 +38,7 @@ export class State {
     State.state.minSwapTime = Settings.getSetting("minTime");
     State.state.maxSwapTime = Settings.getSetting("maxTime");
     State.state.loadLastKnownSaves = Settings.getSetting("loadLastKnownSaves");
+    State.state.automaticSwapping = Settings.getSetting("automaticSwapping");
 
     return State.state;
   }

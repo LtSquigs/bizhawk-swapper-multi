@@ -11,7 +11,8 @@ export class Settings {
     maxTime: 180,
     countdown: true,
     everyoneSwaps: true,
-    loadLastKnownSaves: true
+    loadLastKnownSaves: true,
+    automaticSwapping: true
   };
 
   static initialize() {

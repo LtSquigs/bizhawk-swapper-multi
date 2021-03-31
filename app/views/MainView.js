@@ -15,6 +15,10 @@ export class MainView extends Component {
     Actions.updateEveryoneSwaps(event.target.checked);
   }
 
+  updateAutomaticSwapping(event) {
+    Actions.updateAutomaticSwapping(event.target.checked);
+  }
+
   updateLoadLastSaves(event) {
     Actions.updateLoadLastSaves(event.target.checked);
   }
@@ -29,6 +33,10 @@ export class MainView extends Component {
 
   launchBizhawk() {
     Actions.launchBizhawk();
+  }
+
+  forceSwap() {
+    Actions.forceSwap();
   }
 
   runGames() {
@@ -100,7 +108,7 @@ export class MainView extends Component {
 
   render() {
     const cantRunGames = !this.props.bizhawkConnected ||
-                          (Object.keys(this.props.users).length !== this.props.roms.filter(rom => rom.selected).length) ||
+                        //  (Object.keys(this.props.users).length !== this.props.roms.filter(rom => rom.selected).length) ||
                           (Object.values(this.props.users).filter(user => user.bizhawkConnected).length !== Object.keys(this.props.users).length);
     return html`
       <div class="container main-view">
@@ -123,15 +131,17 @@ export class MainView extends Component {
               <input type="checkbox" class="form-check-input" checked=${this.props.loadLastKnownSaves} onChange=${this.updateLoadLastSaves} disabled=${!this.props.isHost}></input>
               <label class="form-check-label">Resume From Last Save</label>
             </div>
-            <!--
             <div class="form-check">
               <input type="checkbox" class="form-check-input" checked=${this.props.enableCountdown} onChange=${this.updateCountdown} disabled=${!this.props.isHost}></input>
               <label class="form-check-label">Enable Countdown</label>
             </div>
-            -->
             <div class="form-check">
               <input type="checkbox" class="form-check-input" checked=${this.props.everyoneSwaps} onChange=${this.updateEveryoneSwaps} disabled=${!this.props.isHost}></input>
               <label class="form-check-label">Everyone Swaps Together</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" checked=${this.props.automaticSwapping} onChange=${this.updateAutomaticSwapping} disabled=${!this.props.isHost}></input>
+              <label class="form-check-label">Automatic Swapping</label>
             </div>
           </div>
           <div class="col-6">
@@ -153,8 +163,9 @@ export class MainView extends Component {
           <div class="bizhawk-controls">
           ${this.renderBizhawkConnectionStatus() }
           <div>
-            <button class="btn btn-primary mr-4" onClick=${this.launchBizhawk}>Launch Bizhawk</button>
-            <button class="btn btn-primary ml-4" disabled=${cantRunGames} onClick=${this.runGames}>Run Games</button>
+            <button class="btn btn-primary mr-2" onClick=${this.launchBizhawk}>Launch Bizhawk</button>
+            <button class="btn btn-primary ml-2" disabled=${cantRunGames} onClick=${this.runGames}>Run Games</button>
+            <button class="btn btn-primary ml-4" disabled=${!this.props.isRunning} onClick=${this.forceSwap}>Force Swap</button>
           </div>
           </div>
         </div>

@@ -136,6 +136,22 @@ export class BizhawkApi {
     }, () => { });
   }
 
+  static startCountdown() {
+    return new Promise((resolve, reject) => {
+      if(!BizhawkApi.socket) {
+        return resolve();
+      }
+
+      const id = uuidv4();
+
+      BizhawkApi.responseFunctions[id] = () => {
+        resolve();
+      }
+
+      BizhawkApi.send(id, "start_countdown");
+    });
+  }
+
   static loadRom(rom) {
     return new Promise((resolve, reject) => {
       if(!BizhawkApi.socket) {

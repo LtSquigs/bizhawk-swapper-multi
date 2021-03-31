@@ -68,7 +68,7 @@ export class Runner {
     // If the current live games < # of players, we need to dead a player
     // dead player will be the one who has a dead game, or if no one has a dead game
     // the last players in the list gets deaded until were even
-    if(Runner.livePlayers.length > Runner.liveGames) {
+    if(Runner.livePlayers.length > Runner.liveGames.length) {
       const killPlayers = [];
       Runner.livePlayers.forEach((player) => {
         const lastGame = Runner.playersToGames[player];
@@ -91,7 +91,7 @@ export class Runner {
     // and there are some dead players. Undead them.
     if(Runner.liveGames.length > Runner.livePlayers.length && Runner.deadPlayers.length > 0) {
       while(Runner.liveGames.length > Runner.livePlayers.length) {
-        const undeadPlayer = Runner.deadPlayers.unshift();
+        const undeadPlayer = Runner.deadPlayers.shift();
         Runner.livePlayers.push(undeadPlayer);
       }
     }
@@ -228,13 +228,8 @@ export class Runner {
       });
 
       Promise.all(savePromises).then((results) => {
-        const gamesToSaves = {};
-
-        results.forEach((result) => {
-          gamesToSaves[oldMap[result.player]] = result;
-        });
-
         Runner.saveStates(results, oldMap);
+        const gamesToSaves = Runner.loadLastSaves();
 
         const endSaveTime = Date.now();
 

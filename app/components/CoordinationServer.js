@@ -50,6 +50,15 @@ export class CoordinationServer {
       if(player == myUsername) {
         BizhawkApi.startCountdown();
       } else {
+        let connection = null;
+        for(let id in CoordinationServer.connections) {
+          if (CoordinationServer.connections[id].username === player) {
+            connection = CoordinationServer.connections[id];
+          }
+        }
+
+        const ws = connection.ws;
+        
         ws.send(JSON.stringify({
           type: "start_countdown"
         }));

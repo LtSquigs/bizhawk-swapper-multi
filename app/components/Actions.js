@@ -92,6 +92,14 @@ export class Actions {
   }
 
   static updateMinTime(time) {
+    // If the minimum is small enough then also need to update the
+    // timeouts
+    if (time < (State.getState("bizhawkTimeout") * (State.getState("bizhawkMaxRetries") + 1))) {
+      State.setState("bizhawkMaxRetries", 2);
+    } else {
+      State.setState("bizhawkMaxRetries", 0);
+    }
+
     State.setState("minSwapTime", time);
     Settings.setSetting("minTime", time);
   }
@@ -132,6 +140,10 @@ export class Actions {
   }
 
   static swapPlayers() {
+    if (State.getState('isSwapping')) {
+      return;
+    }
+
     Runner.shufflePlayers();
   }
 

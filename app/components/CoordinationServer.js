@@ -15,6 +15,7 @@ export class CoordinationServer {
   static server = null;
   static connections = {};
   static users = {};
+  static loadingRom = false;
 
   static addUser(username, bizhawkStatus) {
     CoordinationServer.users[username] = {
@@ -72,12 +73,19 @@ export class CoordinationServer {
       const myUsername = Settings.getSetting('username');
 
       if(player == myUsername) {
+        CoordinationServer.loadingRom = true;
         BizhawkApi.loadRom(name).then((game_loaded) => {
-          if (saveInfo && game_loaded == name) {
-            BizhawkApi.loadState(saveInfo).then((game_saved) => {
-              resolve(game_saved);
-            });
+          if (saveInfo) {
+            if (game_loaded == name) {
+              BizhawkApi.loadState(saveInfo).then((game_saved) => {
+                CoordinationServer.loadingRom = false;
+                resolve(game_saved);
+              });
+            } else {
+              resolve(game_loaded);
+            }
           } else {
+            CoordinationServer.loadingRom = false;
             resolve(game_loaded);
           }
         });
@@ -117,6 +125,9 @@ export class CoordinationServer {
       const myUsername = Settings.getSetting('username');
 
       if(player == myUsername) {
+        if (CoordinationServer.loadingRom) {
+          return resolve({ player: player, md5: null, saved_game: null, data:null})
+        }
         BizhawkApi.saveState().then(result => {
           resolve({ player: player, md5: result.md5, saved_game: result.game, ...result});
         });
@@ -143,6 +154,12 @@ export class CoordinationServer {
 
           if (resultMessagRecieved && dataMessageRecieved) {
             resolve({player: player, md5: md5, saved_game: savedGame, ...result});
+          }
+
+          // Client decided to not save game because of instable state
+          if (savedGame == null) {
+            connection.dataListener = null;
+            resolve({player: player, md5: null, saved_game: null, ...result});
           }
         }
 

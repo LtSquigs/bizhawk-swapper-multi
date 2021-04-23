@@ -182,14 +182,14 @@ export class BizhawkApi {
 
         retryCount++;
 
-        if(retryCount >= BizhawkApi.retriesMax) {
+        if(retryCount >  State.getState("bizhawkMaxRetries")) {
           cancelled = true;
           resolve();
           return;
         }
 
         sendAndResolve(resolve);
-      } , BizhawkApi.retryTimeout);
+      } , State.getState("bizhawkTimeout"));
 
       BizhawkApi.send(id, message_type, arg);
     }
@@ -245,7 +245,7 @@ export class BizhawkApi {
         }
 
         const hash = crypto.createHash('md5');
-        hash.update(data);
+        hash.update(data || '');
 
         resolve({
           game: game,

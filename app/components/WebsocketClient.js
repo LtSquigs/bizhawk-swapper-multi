@@ -9,6 +9,11 @@ export class WebsocketClient {
   static dataMessage = null;
   static dataCallback = null;
 
+  // Keeps track of the status of rom loading, so we know wether or not its
+  // safe to actually save state and transfer it in case of hangups between
+  // load and state load
+  static loadingRom = false;
+
   static updateUser() {
     if (!WebsocketClient.client) {
       return;
@@ -63,8 +68,10 @@ export class WebsocketClient {
             BizhawkApi.startCountdown();
             break;
           case "load_rom":
+            WebsocketClient.loadingRom = true;
             romName = message.name;
             BizhawkApi.loadRom(romName).then((game_loaded) => {
+              WebsocketClient.loadingRom = false;
               WebsocketClient.client.send(JSON.stringify({
                 type: "rom_loaded",
                 game_loaded: game_loaded
@@ -72,6 +79,7 @@ export class WebsocketClient {
             });
             break;
           case "load_rom_with_save":
+            WebsocketClient.loadingRom = true;
             romName = message.name;
 
             const loadAll = () => {
@@ -83,6 +91,7 @@ export class WebsocketClient {
                   WebsocketClient.dataMessage = null;
 
                   if(game_loaded == romName) {
+                    WebsocketClient.loadingRom = false;
                     BizhawkApi.loadState(saveInfo).then((game_restored) => {
                       WebsocketClient.client.send(JSON.stringify({
                         type: "rom_loaded",
@@ -106,6 +115,16 @@ export class WebsocketClient {
 
             break;
           case "save_state":
+            // We're still in a "loading" state, so we shouldnt trust a save
+            // state, instead just send back blank
+            if(WebsocketClient.loadingRom) {
+              return WebsocketClient.client.send(JSON.stringify({
+                type: "state_saved",
+                saved_game: null,
+                md5: null
+              }));
+            }
+
             BizhawkApi.saveState().then(savedState => {
               WebsocketClient.client.send(JSON.stringify({
                 type: "state_saved",

@@ -189,6 +189,7 @@ export class Runner {
 
   static shufflePlayers() {
     Runner.clearTimeout();
+    State.setState('isSwapping', true);
     const newMap = Runner.getNewPlayerGameMap();
 
     if (State.getState("enableCountdown")) {
@@ -218,15 +219,61 @@ export class Runner {
 
       const loadPromises = Object.keys(newMap).map((player) => {
         const game = newMap[player];
-        if (gamesToFirstSaves[game]) {
-          return CoordinationServer.loadRom(player, game, gamesToFirstSaves[game])
-        }
 
-        return CoordinationServer.loadRom(player, game);
+        return new Promise((resolve, reject) => {
+          let timeout = null;
+          let loaded = false;
+          if (gamesToFirstSaves[game]) {
+            CoordinationServer.loadRom(player, game, gamesToFirstSaves[game]).then((result) => {
+              if (timeout) clearTimeout(timeout);
+              if (loaded) return;
+
+              loaded = true;
+              resolve(result);
+            });
+          } else {
+            CoordinationServer.loadRom(player, game).then((result) => {
+              if (timeout) clearTimeout(timeout);
+              if (loaded) return;
+
+              loaded = true;
+              resolve(result);
+            });
+          }
+
+          timeout = setTimeout(() => {
+            if(loaded) return;
+
+            loaded = true;
+            resolve(null);
+          }, State.getState("bizhawkTimeout") * (State.getState("bizhawkMaxRetries") + 1));
+        });
+      });
+
+      Promise.all(loadPromises).then(() => {
+        State.setState('isSwapping', false);
       });
 
     } else {
       const savePromises = Object.keys(oldMap).map((player) => {
+        return new Promise((resolve, reject) => {
+          let recieved = false;
+          let timeout = null;
+          CoordinationServer.saveState(player).then((result) => {
+            if (timeout) clearTimeout(timeout);
+            if (recieved) return;
+
+            recieved = true;
+            resolve(result);
+          });
+
+          timeout = setTimeout(() => {
+            if(recieved) return;
+
+            recieved = true;
+            resolve({});
+          }, State.getState("bizhawkTimeout") * (State.getState("bizhawkMaxRetries") + 1))
+        });
         return CoordinationServer.saveState(player);
       });
 
@@ -235,15 +282,15 @@ export class Runner {
         results.forEach(result => {
           const game = oldMap[result.player];
           const hash = crypto.createHash('md5');
-          hash.update(result.data);
+          hash.update(result.data || '');
           const calcMd5 = hash.digest('hex');
 
           // Some sanity checks before we commit this save to memory
           // 1. Do the client and server agree on what the game was
           // 2. Does the md5 match the data
+          // 3. There is no data to save
           // If either are not true we do not save this in memory
-          if (game !== result.saved_game || calcMd5 !== result.md5) {
-            console.log('save mismatch');
+          if (game !== result.saved_game || calcMd5 !== result.md5 || !result.data) {
             return;
           }
 
@@ -258,7 +305,28 @@ export class Runner {
             return;
           }
 
-          return CoordinationServer.loadRom(player, game, Runner.gamesToSaves[game]);
+          return new Promise((resolve, reject) => {
+            let timeout = null;
+            let loaded = false;
+            CoordinationServer.loadRom(player, game, Runner.gamesToSaves[game]).then((result) => {
+              if (timeout) clearTimeout(timeout);
+              if (loaded) return;
+
+              loaded = true;
+              resolve(result);
+            });
+
+            timeout = setTimeout(() => {
+              if(loaded) return;
+
+              loaded = true;
+              resolve(null);
+            }, State.getState("bizhawkTimeout") * (State.getState("bizhawkMaxRetries") + 1));
+          });
+        });
+
+        Promise.all(loadPromises).then(() => {
+          State.setState('isSwapping', false);
         });
       });
     }
@@ -290,14 +358,15 @@ export class Runner {
       const game = oldMap[result.player];
       const saveFile = path.join(saveDir, game + '.save');
       const hash = crypto.createHash('md5');
-      hash.update(result.data);
+      hash.update(result.data || '');
       const calcMd5 = hash.digest('hex');
 
       // Some sanity checks before we commit this save to the fs
       // 1. Do the client and server agree on what the game was
       // 2. Does the md5 match the data
+      // 3. There is no data to save
       // If either are not true we do not save this to the fs
-      if (game !== result.saved_game || calcMd5 !== result.md5) {
+      if (game !== result.saved_game || calcMd5 !== result.md5 || !result.data) {
         return;
       }
 

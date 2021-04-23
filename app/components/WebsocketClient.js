@@ -109,7 +109,8 @@ export class WebsocketClient {
             BizhawkApi.saveState().then(savedState => {
               WebsocketClient.client.send(JSON.stringify({
                 type: "state_saved",
-                saved_game: savedState.game
+                saved_game: savedState.game,
+                md5: savedState.md5
               }));
               WebsocketClient.client.send(savedState.data);
             });

@@ -118,7 +118,7 @@ export class CoordinationServer {
 
       if(player == myUsername) {
         BizhawkApi.saveState().then(result => {
-          resolve({ player: player, saved_game: result.game, ...result});
+          resolve({ player: player, md5: result.md5, saved_game: result.game, ...result});
         });
       } else {
         let connection = null;
@@ -133,14 +133,16 @@ export class CoordinationServer {
         let resultMessagRecieved = false;
         let dataMessageRecieved = false;
         let savedGame = null;
+        let md5 = null;
 
         connection.listeners["state_saved"] = (message) => {
           resultMessagRecieved = true;
           savedGame = message.saved_game;
+          md5 = message.md5;
           delete connection.listeners["state_saved"];
 
           if (resultMessagRecieved && dataMessageRecieved) {
-            resolve({player: player, saved_game: savedGame, ...result});
+            resolve({player: player, md5: md5, saved_game: savedGame, ...result});
           }
         }
 
@@ -151,7 +153,7 @@ export class CoordinationServer {
           result.data = message;
 
           if (resultMessagRecieved && dataMessageRecieved) {
-            resolve({player: player, saved_game: savedGame, ...result});
+            resolve({player: player, md5: md5, saved_game: savedGame, ...result});
           }
         }
 

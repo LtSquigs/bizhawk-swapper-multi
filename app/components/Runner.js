@@ -5,6 +5,7 @@ import { WebsocketClient } from './WebsocketClient.js';
 import { CoordinationServer } from './CoordinationServer.js'
 
 const path = require('path');
+const crypto = require('crypto');
 
 function shuffleArray(a) {
   a = a.slice();
@@ -233,9 +234,16 @@ export class Runner {
         Runner.saveStates(results, oldMap);
         results.forEach(result => {
           const game = oldMap[result.player];
-          if (game !== result.saved_game) {
-            // Somehow we have mismatch between the game the main server thinks
-            // the player has, so we throw out this save
+          const hash = crypto.createHash('md5');
+          hash.update(result.data);
+          const calcMd5 = hash.digest('hex');
+
+          // Some sanity checks before we commit this save to memory
+          // 1. Do the client and server agree on what the game was
+          // 2. Does the md5 match the data
+          // If either are not true we do not save this in memory
+          if (game !== result.saved_game || calcMd5 !== result.md5) {
+            console.log('save mismatch');
             return;
           }
 
@@ -281,10 +289,15 @@ export class Runner {
     saves.forEach((result) => {
       const game = oldMap[result.player];
       const saveFile = path.join(saveDir, game + '.save');
+      const hash = crypto.createHash('md5');
+      hash.update(result.data);
+      const calcMd5 = hash.digest('hex');
 
-      if (game !== result.saved_game) {
-        // Somehow we have mismatch between the game the main server thinks
-        // the player has, so we dont write this save out
+      // Some sanity checks before we commit this save to the fs
+      // 1. Do the client and server agree on what the game was
+      // 2. Does the md5 match the data
+      // If either are not true we do not save this to the fs
+      if (game !== result.saved_game || calcMd5 !== result.md5) {
         return;
       }
 

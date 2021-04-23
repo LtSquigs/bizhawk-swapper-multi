@@ -4,6 +4,7 @@ import { Files } from './Files.js';
 let path = require('path');
 let exec = require('child_process').execFile;
 const net = require('net');
+const crypto = require('crypto');
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -234,13 +235,21 @@ export class BizhawkApi {
 
     return new Promise((resolve, reject) => {
       BizhawkApi.sendWithRetries(id, "save_state", `${saveFile}`).then((game) => {
-        const data = Files.readFileSync(saveFile);
+        let data = null;
 
-        // delete the save as it has no use now
-        Files.unlinkSync(saveFile);
+        if (Files.existsSync(saveFile)) {
+          data = Files.readFileSync(saveFile);
+
+          // delete the save as it has no use now
+          Files.unlinkSync(saveFile);
+        }
+
+        const hash = crypto.createHash('md5');
+        hash.update(data);
 
         resolve({
           game: game,
+          md5: hash.digest('hex'),
           data: data
         });
       });

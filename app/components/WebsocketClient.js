@@ -64,9 +64,10 @@ export class WebsocketClient {
             break;
           case "load_rom":
             romName = message.name;
-            BizhawkApi.loadRom(romName).then(() => {
+            BizhawkApi.loadRom(romName).then((game_loaded) => {
               WebsocketClient.client.send(JSON.stringify({
-                type: "rom_loaded"
+                type: "rom_loaded",
+                game_loaded: game_loaded
               }));
             });
             break;
@@ -74,18 +75,26 @@ export class WebsocketClient {
             romName = message.name;
 
             const loadAll = () => {
-              BizhawkApi.loadRom(romName).then(() => {
+              BizhawkApi.loadRom(romName).then((game_loaded) => {
                   const saveInfo = {
                     data: WebsocketClient.dataMessage
                   }
 
                   WebsocketClient.dataMessage = null;
 
-                  BizhawkApi.loadState(saveInfo).then(() => {
+                  if(game_loaded == romName) {
+                    BizhawkApi.loadState(saveInfo).then((game_restored) => {
+                      WebsocketClient.client.send(JSON.stringify({
+                        type: "rom_loaded",
+                        game_loaded: game_restored
+                      }));
+                    });
+                  } else {
                     WebsocketClient.client.send(JSON.stringify({
-                      type: "rom_loaded"
+                      type: "rom_loaded",
+                      game_loaded: game_loaded
                     }));
-                  });
+                  }
               });
             }
 
@@ -99,7 +108,8 @@ export class WebsocketClient {
           case "save_state":
             BizhawkApi.saveState().then(savedState => {
               WebsocketClient.client.send(JSON.stringify({
-                type: "state_saved"
+                type: "state_saved",
+                saved_game: savedState.game
               }));
               WebsocketClient.client.send(savedState.data);
             });

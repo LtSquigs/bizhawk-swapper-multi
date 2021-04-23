@@ -32,6 +32,16 @@ export class BizhawkApi {
 
   static responseFunctions = {};
 
+  static retriesMax = 3;
+
+  static retryTimeout = 1000 * 3;
+
+  static sendDelay = 300;
+
+  static lastSend = Date.now();
+
+  static lastMessageTime = Date.now();
+
   static start() {
     BizhawkApi.updateRomList();
 
@@ -56,7 +66,7 @@ export class BizhawkApi {
         const id = parts[0];
 
         if(BizhawkApi.responseFunctions[id]) {
-          BizhawkApi.responseFunctions[id](parts[1]);
+          BizhawkApi.responseFunctions[id](path.basename(parts[2]));
         }
       });
 
@@ -97,7 +107,17 @@ export class BizhawkApi {
       messageStr = `${id};${messageType};0;\r\n`
     }
 
-    BizhawkApi.socket.write(messageStr);
+    let lastSendDiff = Date.now() - BizhawkApi.lastSend;
+
+    if (lastSendDiff  <= BizhawkApi.sendDelay) {
+      setTimeout(() => {
+        BizhawkApi.socket.write(messageStr);
+        BizhawkApi.lastSend = Date.now();
+      }, BizhawkApi.sendDelay - lastSendDiff)
+    } else {
+      BizhawkApi.socket.write(messageStr);
+      BizhawkApi.lastSend = Date.now();
+    }
   }
 
   static updateRomList() {
@@ -136,16 +156,62 @@ export class BizhawkApi {
     }, () => { });
   }
 
+  static sendWithRetries(id, message_type, arg) {
+    let retryCount = 0;
+    let responded = false;
+
+    const sendAndResolve = (resolve) => {
+      let cancelled = false;
+
+      let responseFunction = (game) => {
+        responded = true;
+
+        if (cancelled) return;
+
+        resolve(game);
+      }
+
+      BizhawkApi.responseFunctions[id] = responseFunction;
+
+      setTimeout(() => {
+        if(responded) {
+          cancelled = true;
+          return;
+        }
+
+        retryCount++;
+
+        if(retryCount >= BizhawkApi.retriesMax) {
+          cancelled = true;
+          resolve();
+          return;
+        }
+
+        sendAndResolve(resolve);
+      } , BizhawkApi.retryTimeout);
+
+      BizhawkApi.send(id, message_type, arg);
+    }
+
+    return new Promise((resolve, reject) => {
+        if(!BizhawkApi.socket) {
+          return resolve();
+        }
+
+        sendAndResolve(resolve);
+    });
+  }
+
   static startCountdown() {
     return new Promise((resolve, reject) => {
       if(!BizhawkApi.socket) {
-        return resolve();
+        return resolve({});
       }
 
       const id = uuidv4();
 
-      BizhawkApi.responseFunctions[id] = () => {
-        resolve();
+      BizhawkApi.responseFunctions[id] = async (game) => {
+        resolve(game);
       }
 
       BizhawkApi.send(id, "start_countdown");
@@ -153,73 +219,52 @@ export class BizhawkApi {
   }
 
   static loadRom(rom) {
-    return new Promise((resolve, reject) => {
-      if(!BizhawkApi.socket) {
-        return resolve();
-      }
-
-      const id = uuidv4();
-
-      BizhawkApi.responseFunctions[id] = () => {
-        resolve();
-      }
-
-      BizhawkApi.send(id, "open_rom", Files.resolve(path.join('SwapRoms', rom)));
-    });
+    const id = uuidv4();
+    return BizhawkApi.sendWithRetries(id, "open_rom", Files.resolve(path.join('SwapRoms', rom)));
   }
 
   static saveState() {
+    const id = uuidv4();
+    const saveDir = Files.resolve('Saves');
+    const saveFile = path.join(saveDir, id);
+
+    if (!Files.existsSync(saveDir)) {
+      Files.mkdirSync(saveDir);
+    }
+
     return new Promise((resolve, reject) => {
-      if(!BizhawkApi.socket) {
-        return resolve({});
-      }
-
-      const id = uuidv4();
-      const saveDir = Files.resolve('Saves');
-      const saveFile = path.join(saveDir, id);
-
-      if (!Files.existsSync(saveDir)) {
-        Files.mkdirSync(saveDir);
-      }
-
-      BizhawkApi.responseFunctions[id] = async (response) => {
+      BizhawkApi.sendWithRetries(id, "save_state", `${saveFile}`).then((game) => {
         const data = Files.readFileSync(saveFile);
 
         // delete the save as it has no use now
         Files.unlinkSync(saveFile);
 
         resolve({
+          game: game,
           data: data
         });
-      }
-
-      BizhawkApi.send(id, "save_state", `${saveFile}`);
+      });
     });
   }
 
   static loadState(saveInfo) {
+    const id = uuidv4();
+    const saveDir = Files.resolve('Saves');
+    const saveFile = path.join(saveDir, id);
+
+    if (!Files.existsSync(saveDir)) {
+      Files.mkdirSync(saveDir);
+    }
+
+    Files.writeFileSync(saveFile, saveInfo.data);
+
     return new Promise((resolve, reject) => {
-      if(!BizhawkApi.socket) {
-        return resolve({});
-      }
-
-      const id = uuidv4();
-      const saveDir = Files.resolve('Saves');
-      const saveFile = path.join(saveDir, id);
-
-      if (!Files.existsSync(saveDir)) {
-        Files.mkdirSync(saveDir);
-      }
-
-      Files.writeFileSync(saveFile, saveInfo.data);
-
-      BizhawkApi.responseFunctions[id] = async (response) => {
+      BizhawkApi.sendWithRetries(id, "load_state", `${saveFile}`).then((game) => {
         Files.unlinkSync(saveFile)
-        resolve();
-      }
-
-
-      BizhawkApi.send(id, "load_state", `${saveFile}`);
+        resolve({
+          game: game
+        });
+      });
     });
   }
 }

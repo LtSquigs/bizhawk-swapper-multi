@@ -1,7 +1,6 @@
 import { State } from './State.js';
 import { Settings } from './Settings.js';
 import { Actions } from './Actions.js';
-import { BizhawkApi } from './BizhawkApi.js';
 import { WebsocketClient } from './WebsocketClient.js';
 import { CoordinationServer } from './CoordinationServer.js'
 
@@ -43,7 +42,8 @@ export class Runner {
   static livePlayers = [];
   static deadPlayers = [];
 
-  static playersToGames = {}
+  static playersToGames = {};
+  static gamesToSaves = {};
 
   static currentTimer = null;
 
@@ -142,6 +142,7 @@ export class Runner {
 
      Actions.updateIsRunning(true);
 
+     Runner.gamesToSaves = {};
      Runner.liveGames = games.filter(game => game.selected).map(game => game.name);
      Runner.deadGames = games.filter(game => !game.selected).map(game => game.name);
      Runner.livePlayers = Object.keys(players);
@@ -212,6 +213,8 @@ export class Runner {
         gamesToFirstSaves = Runner.loadLastSaves();
       }
 
+      Runner.gamesToSaves = gamesToFirstSaves;
+
       const loadPromises = Object.keys(newMap).map((player) => {
         const game = newMap[player];
         if (gamesToFirstSaves[game]) {
@@ -222,39 +225,33 @@ export class Runner {
       });
 
     } else {
-      const startSaveTime = Date.now();
       const savePromises = Object.keys(oldMap).map((player) => {
         return CoordinationServer.saveState(player);
       });
 
       Promise.all(savePromises).then((results) => {
         Runner.saveStates(results, oldMap);
-        const gamesToSaves = Runner.loadLastSaves();
+        results.forEach(result => {
+          const game = oldMap[result.player];
+          if (game !== result.saved_game) {
+            // Somehow we have mismatch between the game the main server thinks
+            // the player has, so we throw out this save
+            return;
+          }
 
-        const endSaveTime = Date.now();
+          // Update the save game map
+          Runner.gamesToSaves[game] = result;
+        })
 
-        // Because socket servers are... unreliable, if not enough time is taken
-        // on the save, then an immediate load afterwards will get lost in the socket
-        // server, we add a delay here in that case. (hacky but I dont care)
+        const loadPromises = Object.keys(newMap).map((player) => {
+          const game = newMap[player];
 
-        const loadFunc = () => {
-          const loadPromises = Object.keys(newMap).map((player) => {
-            const game = newMap[player];
+          if(newMap[player] == oldMap[player]) {
+            return;
+          }
 
-            if(newMap[player] == oldMap[player]) {
-              return;
-            }
-
-            return CoordinationServer.loadRom(player, game, gamesToSaves[game]);
-          });
-        }
-
-        if (((endSaveTime) - (startSaveTime)) < 200) {
-          setTimeout(loadFunc, 200);
-        } else {
-          loadFunc();
-        }
-
+          return CoordinationServer.loadRom(player, game, Runner.gamesToSaves[game]);
+        });
       });
     }
 
@@ -284,6 +281,12 @@ export class Runner {
     saves.forEach((result) => {
       const game = oldMap[result.player];
       const saveFile = path.join(saveDir, game + '.save');
+
+      if (game !== result.saved_game) {
+        // Somehow we have mismatch between the game the main server thinks
+        // the player has, so we dont write this save out
+        return;
+      }
 
       Files.writeFileSync(saveFile, result.data);
     });

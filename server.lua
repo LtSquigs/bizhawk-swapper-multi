@@ -2,6 +2,7 @@ check_interval = 60 -- check every second (60frames)
 current_interval = 0
 unprocessed_messages = ""
 countdown = 0
+current_game_name = userdata.get("current_game_name") or ""
 
 if userdata.get("unprocessed_messages") ~= nil then
   unprocessed_messages = userdata.get("unprocessed_messages")
@@ -13,25 +14,26 @@ function process_message(message)
   if type == 'open_rom' then
     print("Opening Rom")
     client.openrom(string.sub(arg, 1, -2))
-    comm.socketServerSend(id .. ';rom_loaded;0;\r\n')
+    userdata.set("current_game_name", string.sub(arg, 1, -2))
+    comm.socketServerSend(id .. ';rom_loaded;' .. (userdata.get("current_game_name") or "") .. ';\r\n')
   end
 
   if type == 'save_state' then
     print("Saving State")
     savestate.save(string.sub(arg, 1, -2))
-    comm.socketServerSend(id .. ';state_saved;0;\r\n')
+    comm.socketServerSend(id .. ';state_saved;' .. (userdata.get("current_game_name") or "") .. ';\r\n')
   end
 
   if type == 'load_state' then
     print("Loading State")
     savestate.load(string.sub(arg, 1, -2))
-    comm.socketServerSend(id .. ';state_loaded;0;\r\n')
+    comm.socketServerSend(id .. ';state_loaded;' .. (userdata.get("current_game_name") or "") .. ';\r\n')
   end
 
   if type == 'start_countdown' then
     print("Starting Countdown")
     countdown = 4
-    comm.socketServerSend(id .. ';countdown_started;0;\r\n')
+    comm.socketServerSend(id .. ';countdown_started;' .. (userdata.get("current_game_name") or "") .. ';\r\n')
   end
 end
 

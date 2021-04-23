@@ -58,7 +58,7 @@ export class CoordinationServer {
         }
 
         const ws = connection.ws;
-        
+
         ws.send(JSON.stringify({
           type: "start_countdown"
         }));
@@ -72,13 +72,13 @@ export class CoordinationServer {
       const myUsername = Settings.getSetting('username');
 
       if(player == myUsername) {
-        BizhawkApi.loadRom(name).then(() => {
-          if (saveInfo) {
-            BizhawkApi.loadState(saveInfo).then(() => {
-              resolve();
+        BizhawkApi.loadRom(name).then((game_loaded) => {
+          if (saveInfo && game_loaded == name) {
+            BizhawkApi.loadState(saveInfo).then((game_saved) => {
+              resolve(game_saved);
             });
           } else {
-            resolve();
+            resolve(game_loaded);
           }
         });
       } else {
@@ -90,9 +90,9 @@ export class CoordinationServer {
         }
 
         const ws = connection.ws;
-        connection.listeners["rom_loaded"] = () => {
+        connection.listeners["rom_loaded"] = (message) => {
           delete connection.listeners["rom_loaded"];
-          resolve();
+          resolve(message.game_loaded);
         }
 
         if (saveInfo) {
@@ -118,7 +118,7 @@ export class CoordinationServer {
 
       if(player == myUsername) {
         BizhawkApi.saveState().then(result => {
-          resolve({ player: player, ...result});
+          resolve({ player: player, saved_game: result.game, ...result});
         });
       } else {
         let connection = null;
@@ -132,13 +132,15 @@ export class CoordinationServer {
         const result = {};
         let resultMessagRecieved = false;
         let dataMessageRecieved = false;
+        let savedGame = null;
 
         connection.listeners["state_saved"] = (message) => {
           resultMessagRecieved = true;
+          savedGame = message.saved_game;
           delete connection.listeners["state_saved"];
 
           if (resultMessagRecieved && dataMessageRecieved) {
-            resolve({player: player, ...result});
+            resolve({player: player, saved_game: savedGame, ...result});
           }
         }
 
@@ -149,7 +151,7 @@ export class CoordinationServer {
           result.data = message;
 
           if (resultMessagRecieved && dataMessageRecieved) {
-            resolve({player: player, ...result});
+            resolve({player: player, saved_game: savedGame, ...result});
           }
         }
 

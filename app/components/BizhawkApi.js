@@ -44,6 +44,8 @@ export class BizhawkApi {
 
   static lastMessageTime = Date.now();
 
+  static retryAttempt = null;
+
   static start() {
     BizhawkApi.updateRomList();
 
@@ -163,6 +165,14 @@ export class BizhawkApi {
     let retryCount = 0;
     let responded = false;
 
+    // We clear here to ensure we dont have weird ordering
+    // If retries are happening while a new message comes in wed rather just
+    // force a failure so it can recover next cycle
+    if (BizhawkApi.retryAttempt) {
+      clearTimeout(BizhawkApi.retryAttempt);
+      BizhawkApi.retryAttempt = null;
+    }
+
     const sendAndResolve = (resolve) => {
       let cancelled = false;
 
@@ -176,7 +186,8 @@ export class BizhawkApi {
 
       BizhawkApi.responseFunctions[id] = responseFunction;
 
-      setTimeout(() => {
+      BizhawkApi.retryAttempt = setTimeout(() => {
+        BizhawkApi.retryAttempt = null;
         if(responded) {
           cancelled = true;
           return;

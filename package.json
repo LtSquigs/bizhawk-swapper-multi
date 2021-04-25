@@ -1,6 +1,6 @@
 {
   "name": "bizhawk-swapper-multi",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "An electron app used to swap games remotely while playing on the BizHawk emulator",
   "main": "main.js",
   "build": {

@@ -154,7 +154,8 @@ export class BizhawkApi {
     Files.writeFileSync(path.join(bizhawkDir, "server.lua"), serverLua);
 
     spawn("EmuHawk.exe", ['--lua=server.lua', '--socket_ip=127.0.0.1', '--socket_port=64646'], {
-      cwd: Files.resolve(bizhawkDir)
+      cwd: Files.resolve(bizhawkDir),
+      stdio: 'ignore'
     });
   }
 

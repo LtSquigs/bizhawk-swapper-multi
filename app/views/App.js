@@ -46,6 +46,17 @@ class App extends Component {
       maxSwapTime=${this.state.maxSwapTime}
       users=${this.state.users}
       roms=${this.state.roms}
+      settingsPage=${this.state.settingsPage}
+      twitchAuthorized=${this.state.twitchAuthorized}
+      twitchEnabled=${this.state.twitchEnabled}
+      twitchChannelRewardsEnabled=${this.state.twitchChannelRewardsEnabled}
+      twitchChannelRewards=${this.state.twitchChannelRewards}
+      twitchChannelRewardTrigger=${this.state.twitchChannelRewardTrigger}
+      twitchBitsEnabled=${this.state.twitchBitsEnabled}
+      twitchBitsThreshold=${this.state.twitchBitsThreshold}
+      twitchCooldown=${this.state.twitchCooldown}
+      twitchBankEnabled=${this.state.twitchBankEnabled}
+      twitchBankCount=${this.state.twitchBankCount}
     />`;
   }
 }

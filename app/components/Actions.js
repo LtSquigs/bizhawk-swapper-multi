@@ -4,8 +4,11 @@ import { BizhawkApi } from './BizhawkApi.js';
 import { WebsocketClient } from './WebsocketClient.js';
 import { CoordinationServer } from './CoordinationServer.js'
 import { Runner } from './Runner.js';
+import { Twitch } from './Twitch.js';
 
 export class Actions {
+  static lastTwitchSwap = 0;
+
   static setUsername(username) {
     Settings.setSetting("username", username);
     State.setState("username", username);
@@ -55,6 +58,10 @@ export class Actions {
 
   static updateIsRunning(running) {
     State.setState("isRunning", running);
+
+    if (running && State.getState('twitchEnabled')) {
+      Actions.startTwitch();
+    }
   }
 
   static updateRom(name, selected) {
@@ -154,4 +161,185 @@ export class Actions {
   static runGames() {
     Runner.run();
   }
+
+  static changeSettingsPage(page) {
+    State.setState('settingsPage', page);
+  }
+
+  static loginTwitch() {
+    Twitch.loginTwitch();
+  }
+
+  static logoutTwitch() {
+    State.setState("twitchAuthorized", false);
+    Settings.setSetting("twitchAccessToken", null);
+    State.setState("twitchChannelRewards", []);
+
+    Twitch.setAccessToken(null).then(() => {
+      Twitch.stop();
+    });
+  }
+
+  static toggleEnableTwitch() {
+    if(State.getState('twitchEnabled')) {
+      State.setState('twitchEnabled', false);
+      Settings.setSetting('twitchEnabled', false);
+
+      Twitch.stop();
+    } else {
+      State.setState('twitchEnabled', true);
+      Settings.setSetting('twitchEnabled', true);
+
+      if (State.getState('isRunning')) {
+        Actions.startTwitch();
+      }
+    }
+  }
+
+  static updateTwitchToken(token, first) {
+    Twitch.validateToken(token).then((results) => {
+      // If the token will expire within 4 days we just invalidate it
+      // so the user can re-authenticate
+      // Basically... I dont want to have to write a bunch of code
+      // checking to see if something is authenticated all the time, if a
+      // session lasts 4 days then i dont care
+      if (results.validated && results.json.expires_in > (60 * 60 * 24 * 4)) {
+        Twitch.setAccessToken(token).then(() => {
+          Settings.setSetting("twitchAccessToken", token);
+          State.setState("twitchAuthorized", true);
+
+          Twitch.getChannelRewards().then((rewards) => {
+            State.setState("twitchChannelRewards", rewards);
+          });
+        });
+      } else {
+        Settings.setSetting("twitchAccessToken", null);
+        State.setState("twitchAuthorized", false);
+      }
+    });
+  }
+
+  static toggleChannelRewards() {
+    if(State.getState('twitchChannelRewardsEnabled')) {
+      State.setState('twitchChannelRewardsEnabled', false);
+      Settings.setSetting('twitchChannelRewardsEnabled', false);
+
+      Twitch.removeChannelListener();
+    } else {
+      State.setState('twitchChannelRewardsEnabled', true);
+      Settings.setSetting('twitchChannelRewardsEnabled', true);
+
+      Twitch.registerChannelListener();
+    }
+  }
+
+  static toggleBankEnabled() {
+    if(State.getState('twitchBankEnabled')) {
+      State.setState('twitchBankEnabled', false);
+      Settings.setSetting('twitchBankEnabled', false);
+    } else {
+      State.setState('twitchBankEnabled', true);
+      Settings.setSetting('twitchBankEnabled', true);
+    }
+  }
+
+  static clearBank() {
+    State.setState("twitchBankCount", 0)
+  }
+
+  static toggleTwitchBits() {
+    if(State.getState('twitchBitsEnabled')) {
+      State.setState('twitchBitsEnabled', false);
+      Settings.setSetting('twitchBitsEnabled', false);
+
+      Twitch.removeBitListener();
+    } else {
+      State.setState('twitchBitsEnabled', true);
+      Settings.setSetting('twitchBitsEnabled', true);
+
+      Twitch.registerBitListener();
+    }
+  }
+
+  static updateTwitchChannelRewardTrigger(reward) {
+    reward = reward || {};
+
+    State.setState("twitchChannelRewardTrigger", reward);
+    Settings.setSetting("twitchChannelRewardTrigger", reward);
+
+    Twitch.setChannelReward(reward);
+  }
+
+  static updateTwitchCooldown(cooldown) {
+    State.setState("twitchCooldown", cooldown);
+    Settings.setSetting("twitchCooldown", cooldown);
+  }
+
+  static updateBitThreshold(threshold) {
+    threshold = threshold || 1000;
+
+    State.setState("twitchBitsThreshold", threshold);
+    Settings.setSetting("twitchBitsThreshold", threshold);
+
+    Twitch.setBitThreshold(threshold);
+  }
+
+  static startTwitch() {
+    if (!State.getState("twitchChannelRewardTrigger").id &&
+        State.getState("twitchChannelRewards").length > 0) {
+      Actions.updateTwitchChannelRewardTrigger(State.getState("twitchChannelRewards")[0]);
+    }
+
+    Twitch.setChannelReward(State.getState("twitchChannelRewardTrigger"));
+    Twitch.setBitThreshold(State.getState("twitchBitsThreshold"))
+
+    Twitch.start(State.getState("twitchChannelRewardsEnabled"), State.getState('twitchBitsEnabled'));
+  }
+
+  static twitchSwap() {
+    // If we are already in the middle of a swap, we don't want to double up
+    if(State.getState("isSwapping")) {
+      if(State.getState('twitchBankEnabled')) {
+        State.setState("twitchBankCount", State.getState("twitchBankCount") + 1);
+      }
+
+      return;
+    }
+
+    const now = Date.now();
+    const lastSwap = State.getState("lastSwap");
+
+    // We are within the cooldown period, ignore this swap
+    if ((now - lastSwap) < (State.getState("twitchCooldown") * 1000)) {
+      if(State.getState('twitchBankEnabled')) {
+        State.setState("twitchBankCount", State.getState("twitchBankCount") + 1);
+      }
+
+      return;
+    }
+
+    Runner.shufflePlayers();
+  }
 }
+
+// Interval to clear the bank
+setInterval(() => {
+  // Twitch isnt enable, bank isnt on or is empty
+  if(!State.getState('twitchEnabled') || !State.getState('twitchBankEnabled') || State.getState("twitchBankCount") <= 0) {
+    return;
+  }
+
+  const now = Date.now();
+  const lastSwap = State.getState("lastSwap");
+
+  // We are within the cooldown period, clear the bank later
+  if ((now - lastSwap) < (State.getState("twitchCooldown") * 1000)) {
+    return;
+  }
+
+  // If we are running, do a swap and reduce the bank by 1
+  if(State.getState("isRunning")) {
+    Runner.shufflePlayers();
+    State.setState("twitchBankCount", State.getState("twitchBankCount") - 1);
+  }
+}, 500);

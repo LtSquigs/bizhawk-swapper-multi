@@ -58,11 +58,13 @@ export class CoordinationServer {
           }
         }
 
-        const ws = connection.ws;
+        if(connection) {
+          const ws = connection.ws;
 
-        ws.send(JSON.stringify({
-          type: "start_countdown"
-        }));
+          ws.send(JSON.stringify({
+            type: "start_countdown"
+          }));
+        }
       }
       resolve();
     });
@@ -95,6 +97,10 @@ export class CoordinationServer {
           if (CoordinationServer.connections[id].username === player) {
             connection = CoordinationServer.connections[id];
           }
+        }
+
+        if(!connection) {
+          return resolve();
         }
 
         const ws = connection.ws;
@@ -137,6 +143,10 @@ export class CoordinationServer {
           if (CoordinationServer.connections[id].username === player) {
             connection = CoordinationServer.connections[id];
           }
+        }
+
+        if(!connection) {
+          return resolve({player: player, md5: null, saved_game: null, data:null});
         }
 
         const ws = connection.ws;

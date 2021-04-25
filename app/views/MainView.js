@@ -43,6 +43,53 @@ export class MainView extends Component {
     Actions.runGames();
   }
 
+  changeSettingsPage(page) {
+    return () => {
+      Actions.changeSettingsPage(page);
+    }
+  }
+
+  loginTwitch() {
+    Actions.loginTwitch()
+  }
+
+  logoutTwitch() {
+    Actions.logoutTwitch();
+  }
+
+  toggleEnableTwitch() {
+    Actions.toggleEnableTwitch();
+  }
+
+  toggleChannelRewards() {
+    Actions.toggleChannelRewards();
+  }
+
+  toggleTwitchBits() {
+    Actions.toggleTwitchBits();
+  }
+
+  toggleTwitchBankEnabled() {
+    Actions.toggleBankEnabled();
+  }
+
+  clearBank() {
+    Actions.clearBank();
+  }
+
+  updateBitThreshold(event) {
+    Actions.updateBitThreshold(event.target.value);
+  }
+
+  updateTwitchCooldown(event) {
+    Actions.updateTwitchCooldown(event.target.value);
+  }
+
+  updateChannelReward = (event) => {
+    const id = event.target.value;
+    Actions.updateTwitchChannelRewardTrigger(this.props.twitchChannelRewards.find(item => item.id == id));
+  }
+
   renderUsers() {
     const userItems = [];
     for(let userName in this.props.users) {
@@ -106,6 +153,103 @@ export class MainView extends Component {
     `
   }
 
+  renderTwitchSettings() {
+    if(this.props.settingsPage !== 'twitch') {
+      return null;
+    }
+
+    return html`
+      ${
+        !this.props.twitchAuthorized ?
+         html`<button class="btn btn-primary mt-2 mb-2" onClick=${this.loginTwitch}>Login To Twitch</button>` :
+         html`<button class="btn btn-danger mt-2 mb-2" onClick=${this.logoutTwitch}>Logout Of Twitch</button>`
+       }
+       <div class="form-check">
+         <input type="checkbox" class="form-check-input" checked=${this.props.twitchEnabled} onChange=${this.toggleEnableTwitch} disabled=${!this.props.isHost || !this.props.twitchAuthorized}></input>
+         <label class="form-check-label">Enable Twitch</label>
+       </div>
+       <div class="form-check">
+         <input type="checkbox" class="form-check-input" checked=${this.props.twitchChannelRewardsEnabled} onChange=${this.toggleChannelRewards} disabled=${!this.props.isHost || !this.props.twitchEnabled || !this.props.twitchAuthorized}></input>
+         <label class="form-check-label">Enable Channel Reward Triggering Swap</label>
+       </div>
+       <div class="form-row">
+         <span class="spaces">Triggering Reward: </span>
+         <select disabled=${!this.props.isHost || !this.props.twitchEnabled || !this.props.twitchAuthorized} onChange=${this.updateChannelReward}>
+          ${
+            this.props.twitchChannelRewards.map((reward) => {
+              if(reward.id == this.props.twitchChannelRewardTrigger.id) {
+                return html`
+                  <option value=${reward.id} selected>${reward.title}</option>
+                `;
+              }
+
+              return html`
+                <option value=${reward.id}>${reward.title}</option>
+              `;
+            })
+          }
+         </select>
+       </div>
+       <div class="form-check">
+         <input type="checkbox" class="form-check-input" checked=${this.props.twitchBitsEnabled } onChange=${this.toggleTwitchBits} disabled=${!this.props.isHost || !this.props.twitchEnabled || !this.props.twitchAuthorized}></input>
+         <label class="form-check-label">Enable Bit Donation Triggering Swap</label>
+       </div>
+       <div class="form-row">
+         <span class="spaces">Donation Threshold: </span>
+         <input type="number" class="form-control col-4" value=${this.props.twitchBitsThreshold} onChange=${this.updateBitThreshold} disabled=${!this.props.isHost || !this.props.twitchEnabled || !this.props.twitchAuthorized}></input><span> (bits)</span>
+       </div>
+       <div class="form-row">
+         <span class="spaces">Cooldown: </span>
+         <input type="number" class="form-control col-4" value=${this.props.twitchCooldown} onChange=${this.updateTwitchCooldown} disabled=${!this.props.isHost}></input><span> (s)</span>
+       </div>
+       <div class="form-check">
+         <input type="checkbox" class="form-check-input" checked=${this.props.twitchBankEnabled} onChange=${this.toggleTwitchBankEnabled} disabled=${!this.props.isHost || !this.props.twitchEnabled || !this.props.twitchAuthorized}></input>
+         <label class="form-check-label">Bank Swaps During Cooldown</label>
+       </div>
+       <div class="form-check">
+         <label class="form-check-label">Current Bank: ${this.props.twitchBankCount}</label>
+         <a href="#" class="ml-1" onClick=${this.clearBank}>Clear Bank</a>
+       </div>
+    `;
+  }
+
+  renderMainSettings() {
+    if(this.props.settingsPage !== 'main') {
+      return null;
+    }
+
+    return  html`
+      <div class="form-group">
+        <label>Minimum Swap Time</label>
+        <div class="form-row">
+          <input type="number" class="form-control col-4" value=${this.props.minSwapTime} onChange=${this.updateMinTime} disabled=${!this.props.isHost}></input><span> (s)</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Maximum Swap Time</label>
+        <div class="form-row">
+          <input type="number" class="form-control col-4"  value=${this.props.maxSwapTime} onChange=${this.updateMaxTime} disabled=${!this.props.isHost}></input><span> (s)</span>
+        </div>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" checked=${this.props.loadLastKnownSaves} onChange=${this.updateLoadLastSaves} disabled=${!this.props.isHost}></input>
+        <label class="form-check-label">Resume From Last Save</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" checked=${this.props.enableCountdown} onChange=${this.updateCountdown} disabled=${!this.props.isHost}></input>
+        <label class="form-check-label">Enable Countdown</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" checked=${this.props.everyoneSwaps} onChange=${this.updateEveryoneSwaps} disabled=${!this.props.isHost}></input>
+        <label class="form-check-label">Everyone Swaps Together</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" checked=${this.props.automaticSwapping} onChange=${this.updateAutomaticSwapping} disabled=${!this.props.isHost}></input>
+        <label class="form-check-label">Automatic Swapping</label>
+      </div>
+    `
+  }
+
   render() {
     const cantRunGames = !this.props.bizhawkConnected ||
                         //  (Object.keys(this.props.users).length !== this.props.roms.filter(rom => rom.selected).length) ||
@@ -114,35 +258,23 @@ export class MainView extends Component {
       <div class="container main-view">
         <div class="row pt-3">
           <div class="col-6">
-            <h3>Settings</h3>
-            <div class="form-group">
-              <label>Minimum Swap Time</label>
-              <div class="form-row">
-                <input type="number" class="form-control col-4" value=${this.props.minSwapTime} onChange=${this.updateMinTime} disabled=${!this.props.isHost}></input><span>(s)</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Maximum Swap Time</label>
-              <div class="form-row">
-                <input type="number" class="form-control col-4"  value=${this.props.maxSwapTime} onChange=${this.updateMaxTime} disabled=${!this.props.isHost}></input><span>(s)</span>
-              </div>
-            </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" checked=${this.props.loadLastKnownSaves} onChange=${this.updateLoadLastSaves} disabled=${!this.props.isHost}></input>
-              <label class="form-check-label">Resume From Last Save</label>
-            </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" checked=${this.props.enableCountdown} onChange=${this.updateCountdown} disabled=${!this.props.isHost}></input>
-              <label class="form-check-label">Enable Countdown</label>
-            </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" checked=${this.props.everyoneSwaps} onChange=${this.updateEveryoneSwaps} disabled=${!this.props.isHost}></input>
-              <label class="form-check-label">Everyone Swaps Together</label>
-            </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" checked=${this.props.automaticSwapping} onChange=${this.updateAutomaticSwapping} disabled=${!this.props.isHost}></input>
-              <label class="form-check-label">Automatic Swapping</label>
-            </div>
+            <h3><span>Settings </span>
+              ${
+                this.props.twitchEnabled && !this.props.twitchAuthorized ?
+                html`<small><small><span class="badge badge-warning">Twitch not authorized</span></small></small>` :
+                null
+              }
+            </h3>
+            <ul class="nav">
+              <li class="nav-item">
+                <a class=${"nav-link " + (this.props.settingsPage == 'main' ? 'disabled' : '')} href="#" onClick=${this.changeSettingsPage('main')}>Main</a>
+              </li>
+              <li class="nav-item">
+                <a class=${"nav-link " + (this.props.settingsPage == 'twitch' ? 'disabled' : '')} href="#" onClick=${this.changeSettingsPage('twitch')}>Twitch</a>
+              </li>
+            </ul>
+            ${ this.renderMainSettings() }
+            ${ this.renderTwitchSettings() }
           </div>
           <div class="col-6">
             <div>

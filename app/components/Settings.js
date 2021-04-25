@@ -12,7 +12,15 @@ export class Settings {
     countdown: true,
     everyoneSwaps: true,
     loadLastKnownSaves: true,
-    automaticSwapping: true
+    automaticSwapping: true,
+    twitchAccessToken: null,
+    twitchEnabled: false,
+    twitchBitsEnabled: false,
+    twitchChannelRewardsEnabled: false,
+    twitchBitsThreshold: 1000,
+    twitchChannelRewardTrigger: {},
+    twitchCooldown: 30,
+    twitchBankEnabled: false,
   };
 
   static initialize() {

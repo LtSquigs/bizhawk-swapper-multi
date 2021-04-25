@@ -20,7 +20,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^10.1.5",
+    "electron": "10.1.5",
     "electron-builder": "^22.9.1",
     "webpack": "^5.4.0",
     "webpack-cli": "^4.2.0"
@@ -28,6 +28,9 @@
   "dependencies": {
     "bootstrap": "^4.5.3",
     "htm": "^3.0.4",
+    "twitch": "^4.5.5",
+    "twitch-auth": "^4.5.5",
+    "twitch-pubsub-client": "^4.5.5",
     "ws": "^7.3.1"
   }
 }

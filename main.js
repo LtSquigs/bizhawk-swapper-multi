@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, session } = require('electron')
 
 function createWindow () {
   const win = new BrowserWindow({
@@ -13,9 +13,18 @@ function createWindow () {
   })
 
   win.loadFile('app/index.html');
+
+  session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
+    win.webContents.send('twitch-login', details.url);
+    callback({
+      cancel: true
+    })
+  })
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow();
+})
 
 app.on('window-all-closed', () => {
   app.quit()
@@ -26,3 +35,7 @@ app.on('activate', () => {
     createWindow()
   }
 });
+
+const filter = {
+  urls: ['http://localhost/bizhawk-multi-swapper*']
+}

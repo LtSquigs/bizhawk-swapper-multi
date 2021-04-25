@@ -189,6 +189,7 @@ export class Runner {
 
   static shufflePlayers() {
     Runner.clearTimeout();
+    State.setState('lastSwap', Date.now());
     State.setState('isSwapping', true);
     const newMap = Runner.getNewPlayerGameMap();
 

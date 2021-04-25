@@ -1,7 +1,7 @@
 check_interval = 60 -- check every second (60frames)
 current_interval = 0
 unprocessed_messages = ""
-countdown = 0
+countdown = -1
 current_game_name = userdata.get("current_game_name") or ""
 
 if userdata.get("unprocessed_messages") ~= nil then
@@ -60,16 +60,18 @@ end
 function doCountdown() -- Draws the countdown box and text
 	gui.drawBox(client.bufferwidth()/2-60,buffer,client.bufferwidth()-(client.bufferwidth()/2+1-60),15+buffer,"white","black")
 	if countdown == 1 then
-		gui.drawText(client.bufferwidth()/2,buffer,"!.!.!.ONE.!.!.!","red",null,null,null,"center")
+		gui.drawText(client.bufferwidth()/2,buffer,"!.!.!.ONE.!.!.!","red",null,null,null,null,"center")
 	elseif countdown == 2 then
-		gui.drawText(client.bufferwidth()/2,buffer,"!.!...TWO...!.!","yellow",null,null,null,"center")
+		gui.drawText(client.bufferwidth()/2,buffer,"!.!...TWO...!.!","yellow",null,null,null,null,"center")
 	elseif countdown == 3 then
-		gui.drawText(client.bufferwidth()/2,buffer,"!....THREE....!","lime",null,null,null,"center")
-	end
+		gui.drawText(client.bufferwidth()/2,buffer,"!....THREE....!","lime",null,null,null,null,"center")
+	elseif countdown == 0 then
+    gui.clearGraphics()
+  end
 end
 
 while true do -- The main cycle that causes the emulator to advance and trigger a game switch.
-  if countdown > 0 then
+  if countdown >= 0 then
     doCountdown()
   end
 
@@ -88,7 +90,7 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
         end
       end
 
-      if countdown > 0 then
+      if countdown >= 0 then
         countdown = countdown - 1;
       end
 

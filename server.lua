@@ -60,11 +60,23 @@ end
 function doCountdown() -- Draws the countdown box and text
 	gui.drawBox(client.bufferwidth()/2-60,buffer,client.bufferwidth()-(client.bufferwidth()/2+1-60),15+buffer,"white","black")
 	if countdown == 1 then
-		gui.drawText(client.bufferwidth()/2,buffer,"!.!.!.ONE.!.!.!","red",null,null,null,null,"center")
+    if client.get_lua_engine() == 'NLua' then
+		  gui.drawText(client.bufferwidth()/2,buffer,"!.!.!.ONE.!.!.!","red",null,null,null,null,"center")
+    else
+		  gui.drawText(client.bufferwidth()/2,buffer,"!.!.!.ONE.!.!.!","red",null,null,null,"center")
+    end
 	elseif countdown == 2 then
-		gui.drawText(client.bufferwidth()/2,buffer,"!.!...TWO...!.!","yellow",null,null,null,null,"center")
+    if client.get_lua_engine() == 'NLua' then
+		  gui.drawText(client.bufferwidth()/2,buffer,"!.!...TWO...!.!","yellow",null,null,null,null,"center")
+    else
+		  gui.drawText(client.bufferwidth()/2,buffer,"!.!...TWO...!.!","yellow",null,null,null,"center")
+    end
 	elseif countdown == 3 then
-		gui.drawText(client.bufferwidth()/2,buffer,"!....THREE....!","lime",null,null,null,null,"center")
+    if client.get_lua_engine() == 'NLua' then
+		  gui.drawText(client.bufferwidth()/2,buffer,"!....THREE....!","lime",null,null,null,null,"center")
+    else
+		  gui.drawText(client.bufferwidth()/2,buffer,"!....THREE....!","lime",null,null,null,"center")
+    end
 	elseif countdown == 0 then
     gui.clearGraphics()
   end

@@ -100,7 +100,7 @@ export class Twitch {
       Twitch.client.helix.channelPoints.getCustomRewards(Twitch.userId).then(res => {
         resolve(res.map(reward => { return { title: reward.title, id: reward.id }; }));
       }).catch((err) => {
-        resolve([{ title: 'Reward Name', id: 0 }, {title: 'Reward 2', id: 1}])
+        resolve([])
       })
     });
   }

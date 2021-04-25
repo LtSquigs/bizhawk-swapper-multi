@@ -3,6 +3,7 @@ import { Files } from './Files.js';
 
 let path = require('path');
 let exec = require('child_process').execFile;
+const spawn = require('child_process').spawn;
 const net = require('net');
 const crypto = require('crypto');
 
@@ -152,9 +153,9 @@ export class BizhawkApi {
 
     Files.writeFileSync(path.join(bizhawkDir, "server.lua"), serverLua);
 
-    exec("EmuHawk.exe", ['--lua=server.lua', '--socket_ip=127.0.0.1', '--socket_port=64646'], {
+    spawn("EmuHawk.exe", ['--lua=server.lua', '--socket_ip=127.0.0.1', '--socket_port=64646'], {
       cwd: Files.resolve(bizhawkDir)
-    }, () => { });
+    });
   }
 
   static sendWithRetries(id, message_type, arg) {

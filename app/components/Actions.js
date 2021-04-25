@@ -133,6 +133,10 @@ export class Actions {
   }
 
   static forceSwap() {
+    if (State.getState('isSwapping')) {
+      return;
+    }
+
     Runner.shufflePlayers();
   }
 
@@ -334,6 +338,11 @@ setInterval(() => {
 
   // We are within the cooldown period, clear the bank later
   if ((now - lastSwap) < (State.getState("twitchCooldown") * 1000)) {
+    return;
+  }
+
+  // Were currently swapping, dont swap
+  if (State.getState('isSwapping')) {
     return;
   }
 

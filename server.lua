@@ -11,6 +11,13 @@ end
 function process_message(message)
   id, type, arg = string.match(message, "([^;]+);([^;]+);(.*)")
 
+  if type == 'close_rom' then
+    print("Closing Rom")
+    client.closerom()
+    userdata.set("current_game_name", "")
+    comm.socketServerSend(id .. ';rom_closed;0;\r\n')
+  end
+
   if type == 'open_rom' then
     print("Opening Rom")
     client.openrom(string.sub(arg, 1, -2))

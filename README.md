@@ -2,6 +2,8 @@
 
 Based off Brossentia's shuffle script, but built for Multiplayer co-op
 
+**Note: Even though this is built for multiplayer, it also works as a single player swapper.**
+
 # What is This
 
 This tool lets you play any roms that BizHawk can run with your friends online, swapping who is playing which game randomly as you play them.
@@ -51,6 +53,25 @@ The system looks for saves with the name structure `<romFileName>.save` in the `
 e.g. `Saves\Super Mario World.sfc.save` would be the last known save for the rom `Super Mario World.sfc`
 
 You can manually swap as well using the Manual Swap button, if automatic swapping is on this will reset the timer but not stop automatic swapping.
+
+# Twitch Integration (Experimental)
+
+The swapper has experimental support for swapping based off of Twitch Bit donations or Channel Point Reward Redemptions. (This is experimental as I do not have an affiliate/partner channel to test it with).
+
+To enable it you can switch to the Twitch settings tab, authenticate against Twitch and change the settings to your requirements. (Note: Authentication may expire and need to be re-done).
+
+The Twitch Integration has the following options:
+
+- Enable Twitch
+  - Turns off and on all the twitch features
+- Enable Channel Reward Triggering Swap
+  - If enabled, the selected Channel Reward will trigger a swap if redeemed while swapper is on
+- Enable Bit Donation Triggering Swap
+  - If enabled, any donations above the provided bit threshold will trigger a swap while the swapper is on
+- Cooldown
+  - Cooldown between twitch initiated swaps. If donations/reward redemptions happen within this time since the last swap they will either be ignored or banked depending on the bank setting. 
+- Bank Swaps During Cooldown
+  - If enabled, any donation/reward redemptions that trigger a swap during the cooldown period will be banked and executed after the cooldown is over.
 
 # Rom Swapping How It Works
 

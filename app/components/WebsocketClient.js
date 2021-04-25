@@ -91,14 +91,15 @@ export class WebsocketClient {
                   WebsocketClient.dataMessage = null;
 
                   if(game_loaded == romName) {
-                    WebsocketClient.loadingRom = false;
                     BizhawkApi.loadState(saveInfo).then((game_restored) => {
+                      WebsocketClient.loadingRom = false;
                       WebsocketClient.client.send(JSON.stringify({
                         type: "rom_loaded",
                         game_loaded: game_restored
                       }));
                     });
                   } else {
+                    WebsocketClient.loadingRom = false;
                     WebsocketClient.client.send(JSON.stringify({
                       type: "rom_loaded",
                       game_loaded: game_loaded

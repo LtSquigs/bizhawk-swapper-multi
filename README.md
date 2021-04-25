@@ -69,7 +69,7 @@ The Twitch Integration has the following options:
 - Enable Bit Donation Triggering Swap
   - If enabled, any donations above the provided bit threshold will trigger a swap while the swapper is on
 - Cooldown
-  - Cooldown between twitch initiated swaps. If donations/reward redemptions happen within this time since the last swap they will either be ignored or banked depending on the bank setting. 
+  - Cooldown between twitch initiated swaps. If donations/reward redemptions happen within this time since the last swap (including non-twitch based swaps) they will either be ignored or banked depending on the bank setting. 
 - Bank Swaps During Cooldown
   - If enabled, any donation/reward redemptions that trigger a swap during the cooldown period will be banked and executed after the cooldown is over.
 
